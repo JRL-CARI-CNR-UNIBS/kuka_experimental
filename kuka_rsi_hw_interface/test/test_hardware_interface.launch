@@ -2,6 +2,8 @@
 <launch>
     <arg name="sim" default="true" />
 
+    <param name="robot_description" command="$(find xacro)/xacro --inorder '$(find kr_50_r2500_description)/urdf/kr_50_r2500_rviz.xacro'"/>
+
     <rosparam file="$(find kuka_rsi_hw_interface)/test/test_params_sim.yaml" command="load" if="$(arg sim)"/>
     <rosparam file="$(find kuka_rsi_hw_interface)/test/test_params.yaml" command="load" unless="$(arg sim)"/>
 
@@ -9,7 +11,15 @@
     <node name="kuka_hardware_interface" pkg="kuka_rsi_hw_interface"
       type="kuka_hardware_interface_node" respawn="false"
       output="screen"
-      required="true"/>
+      required="true">
+      <remap from="/position_trajectory_controller/command" to="/kr_50_r2500/command"/>
+      <remap from="/position_trajectory_controller/follow_joint_trajectory/goal" to="/kr_50_r2500/follow_joint_trajectory/goal"/>
+      <remap from="/position_trajectory_controller/follow_joint_trajectory/cancel" to="/kr_50_r2500/follow_joint_trajectory/cancel"/>
+      <remap from="/position_trajectory_controller/follow_joint_trajectory/feedback" to="/kr_50_r2500/follow_joint_trajectory/feedback"/>
+      <remap from="/position_trajectory_controller/follow_joint_trajectory/result" to="/kr_50_r2500/follow_joint_trajectory/result"/>
+      <remap from="/position_trajectory_controller/follow_joint_trajectory/status" to="/kr_50_r2500/follow_joint_trajectory/status"/>
+      <remap from="/position_trajectory_controller/state" to="/kr_50_r2500/state"/>
+    </node>
 
     <!-- Load joint controller configurations from YAML file to parameter server -->
     <rosparam file="$(find kuka_rsi_hw_interface)/config/hardware_controllers.yaml" command="load"/>
@@ -20,9 +30,9 @@
     <node name="controller_spawner" pkg="controller_manager" type="spawner" respawn="false" output="screen"
         args="position_trajectory_controller joint_state_controller --shutdown-timeout 1"/>
     <!-- Load robot state publisher -->
-    <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" />
+    <!-- <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" /> -->
 
     <!-- Load RSI simulation node -->
-    <node name='kuka_rsi_simulator' pkg='kuka_rsi_simulator' type="kuka_rsi_simulator" args="127.0.0.1 49152" if="$(arg sim)" />
+    <node name='kuka_rsi_simulator' pkg='kuka_rsi_simulator' type="kuka_rsi_simulator" args="127.0.0.1 59152" if="$(arg sim)" />
 
 </launch>

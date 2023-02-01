@@ -104,6 +104,7 @@ bool KukaHardwareInterface::read(const ros::Time time, const ros::Duration perio
   }
 
   rsi_state_ = RSIState(in_buffer_);
+  std::cout << "In\n" << in_buffer_ << "\n";
   for (std::size_t i = 0; i < n_dof_; ++i)
   {
     joint_position_[i] = DEG2RAD * rsi_state_.positions[i];
@@ -123,6 +124,7 @@ bool KukaHardwareInterface::write(const ros::Time time, const ros::Duration peri
   }
 
   out_buffer_ = RSICommand(rsi_joint_position_corrections_, ipoc_).xml_doc;
+  std::cout << "Out\n" << out_buffer_ << "\n";
   server_->send(out_buffer_);
 
   return true;
@@ -136,7 +138,6 @@ void KukaHardwareInterface::start()
   ROS_INFO_STREAM_NAMED("kuka_hardware_interface", "Waiting for robot!");
 
   int bytes = server_->recv(in_buffer_);
-
   // Drop empty <rob> frame with RSI <= 2.3
   if (bytes < 100)
   {
