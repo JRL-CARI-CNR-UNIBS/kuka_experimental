@@ -66,6 +66,9 @@
 #include <kuka_rsi_hw_interface/rsi_state.h>
 #include <kuka_rsi_hw_interface/rsi_command.h>
 
+//SRV
+#include <kuka_rsi_hw_interface/write_outputs.h>
+
 namespace kuka_rsi_hw_interface
 {
 
@@ -90,6 +93,7 @@ private:
   std::vector<double> joint_position_command_;
   std::vector<double> joint_velocity_command_;
   std::vector<double> joint_effort_command_;
+  std::vector<bool> digital_output_;
 
   // RSI
   RSIState rsi_state_;
@@ -127,6 +131,8 @@ public:
   void configure();
   bool read(const ros::Time time, const ros::Duration period);
   bool write(const ros::Time time, const ros::Duration period);
+
+  bool write_digital_outputs(kuka_rsi_hw_interface::write_outputs::Request &req, kuka_rsi_hw_interface::write_outputs::Response &res);
 
 };
 

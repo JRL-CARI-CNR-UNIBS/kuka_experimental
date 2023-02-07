@@ -49,7 +49,7 @@ class RSICommand
 {
 public:
   RSICommand();
-  RSICommand(std::vector<double> position_corrections, unsigned long long ipoc, bool external_axes);
+  RSICommand(std::vector<double> position_corrections, std::vector<bool> digital_output, unsigned long long ipoc, bool external_axes);
   std::string xml_doc;
 };
 
@@ -58,7 +58,7 @@ RSICommand::RSICommand()
   // Intentionally empty
 }
 
-RSICommand::RSICommand(std::vector<double> joint_position_correction, unsigned long long ipoc, bool external_axes = false)
+RSICommand::RSICommand(std::vector<double> joint_position_correction, std::vector<bool> digital_output, unsigned long long ipoc, bool external_axes = false)
 {
   TiXmlDocument doc;
   TiXmlElement* root = new TiXmlElement("Sen");
@@ -72,6 +72,12 @@ RSICommand::RSICommand(std::vector<double> joint_position_correction, unsigned l
   el->SetAttribute("A5", std::to_string(joint_position_correction[4]));
   el->SetAttribute("A6", std::to_string(joint_position_correction[5]));
   root->LinkEndChild(el);
+
+  // Digital Output
+  TiXmlElement* out = new TiXmlElement("Out");
+  out->SetAttribute("01", std::to_string(digital_output[0]));
+  root->LinkEndChild(out);
+
   // External axes
   if (external_axes) {
     el = new TiXmlElement("EK");
