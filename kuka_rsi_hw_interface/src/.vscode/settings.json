@@ -1,0 +1,11 @@
+{
+    "python.autoComplete.extraPaths": [
+        "/home/abel/projects/personal_ws/devel/lib/python3/dist-packages",
+        "/home/abel/projects/sharework_ws/devel/lib/python3/dist-packages",
+        "/home/abel/projects/perception_ws/devel/lib/python3/dist-packages",
+        "/home/abel/projects/planning_ws/devel/lib/python3/dist-packages",
+        "/home/abel/projects/control_ws/devel/lib/python3/dist-packages",
+        "/home/abel/projects/third_parties_ws/devel/lib/python3/dist-packages",
+        "/opt/ros/noetic/lib/python3/dist-packages"
+    ]
+}
