@@ -47,6 +47,7 @@
 // ROS
 #include <ros/ros.h>
 #include <std_msgs/String.h>
+#include <std_msgs/UInt16.h>
 
 
 // ros_control
@@ -86,7 +87,8 @@ private:
   ros::NodeHandle nh_;
 
   int n_dof_;
-  std::string test_type_;
+  std::string test_type_IN_;
+  std::string test_type_OUT_;
 
   std::vector<std::string> joint_names_;
   std::vector<double> joint_position_;
@@ -97,6 +99,7 @@ private:
   std::vector<double> joint_effort_command_;
   std::vector<bool> digital_output_bit_;
   uint16_t digital_output_;
+  uint16_t digital_input_;
 
   // RSI
   RSIState rsi_state_;
@@ -124,6 +127,9 @@ private:
   // Interfaces
   hardware_interface::JointStateInterface joint_state_interface_;
   hardware_interface::PositionJointInterface position_joint_interface_;
+
+  // Digital input publisher
+  ros::Publisher digital_input_pub_;
 
 public:
 

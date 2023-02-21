@@ -51,7 +51,7 @@ KukaHardwareInterface::KukaHardwareInterface() :
     joint_position_(DEFAULT_N_DOF, 0.0), joint_velocity_(DEFAULT_N_DOF, 0.0), joint_effort_(DEFAULT_N_DOF, 0.0),
     joint_position_command_(DEFAULT_N_DOF, 0.0), joint_velocity_command_(DEFAULT_N_DOF, 0.0), joint_effort_command_(DEFAULT_N_DOF, 0.0),
     joint_names_(DEFAULT_N_DOF), rsi_initial_joint_positions_(DEFAULT_N_DOF, 0.0), rsi_joint_position_corrections_(DEFAULT_N_DOF, 0.0),
-    ipoc_(0), n_dof_(DEFAULT_N_DOF), digital_output_bit_(1, false), digital_output_(0)
+    ipoc_(0), n_dof_(DEFAULT_N_DOF), digital_output_bit_(1, false), digital_output_(0), digital_input_(0)
 {
   in_buffer_.resize(1024);
   out_buffer_.resize(1024);
@@ -61,8 +61,11 @@ KukaHardwareInterface::KukaHardwareInterface() :
   nh_.param("rsi/n_dof", n_dof_, DEFAULT_N_DOF);
   ROS_INFO_STREAM_NAMED("kuka_hardware_interface", "DOF: " << n_dof_);
 
-  nh_.param("rsi/test_type", test_type_);
-  ROS_INFO_STREAM_NAMED("kuka_hardware_interface", "DOF: " << n_dof_);
+  nh_.param("rsi/test_type_IN", test_type_IN_);
+  ROS_INFO_STREAM_NAMED("kuka_hardware_interface", "Test type IN: " << test_type_IN_);
+
+  nh_.param("rsi/test_type_OUT", test_type_OUT_);
+  ROS_INFO_STREAM_NAMED("kuka_hardware_interface", "Test type OUT: " << test_type_OUT_);
 
   if (!nh_.getParam("controller_joint_names", joint_names_))
   {
@@ -72,7 +75,7 @@ KukaHardwareInterface::KukaHardwareInterface() :
       "'controller_joint_names' on the parameter server.");
   }
 
-  //Create ros_control interfaces
+  //Create ros_control interfacesstd::string command_type
   for (std::size_t i = 0; i < n_dof_; ++i)
   {
     // Create joint state interface for all joints
@@ -91,6 +94,10 @@ KukaHardwareInterface::KukaHardwareInterface() :
   registerInterface(&position_joint_interface_);
 
   ROS_INFO_STREAM_NAMED("hardware_interface", "Loaded kuka_rsi_hardware_interface");
+
+  // Publish digital input to ROS topic for debugging
+  digital_input_pub_ = nh_.advertise<std_msgs::UInt16>("DIGITAL_INPUT", 100);
+
 }
 
 KukaHardwareInterface::~KukaHardwareInterface()
@@ -111,13 +118,19 @@ bool KukaHardwareInterface::read(const ros::Time time, const ros::Duration perio
     rt_rsi_recv_->unlockAndPublish();
   }
 
-  rsi_state_ = RSIState(in_buffer_);
+  rsi_state_ = RSIState(in_buffer_, test_type_IN_);
   for (std::size_t i = 0; i < n_dof_; ++i)
   {
     joint_position_[i] = DEG2RAD * rsi_state_.positions[i];
   }
 
   ipoc_ = rsi_state_.ipoc;
+  digital_input_ = rsi_state_.digital_input;
+
+  // Read and publish the value of digital input
+  std_msgs::UInt16 msg;
+  msg.data = digital_input_;
+  digital_input_pub_.publish(msg);
 
   return true;
 }
@@ -131,7 +144,7 @@ bool KukaHardwareInterface::write(const ros::Time time, const ros::Duration peri
     rsi_joint_position_corrections_[i] = (RAD2DEG * joint_position_command_[i]) - rsi_initial_joint_positions_[i];
   }
 
-  out_buffer_ = RSICommand(rsi_joint_position_corrections_, digital_output_bit_, digital_output_, ipoc_, test_type_).xml_doc;
+  out_buffer_ = RSICommand(rsi_joint_position_corrections_, digital_output_bit_, digital_output_, ipoc_, test_type_OUT_).xml_doc;
   server_->send(out_buffer_);
 
   if(rt_rsi_send_->trylock()) {
@@ -173,7 +186,7 @@ void KukaHardwareInterface::start()
     bytes = server_->recv(in_buffer_);
   }
 
-  rsi_state_ = RSIState(in_buffer_);
+  rsi_state_ = RSIState(in_buffer_, test_type_IN_);
   std::cout << "In\n" << in_buffer_ << "\n";
   for (std::size_t i = 0; i < n_dof_; ++i)
   {
@@ -183,7 +196,7 @@ void KukaHardwareInterface::start()
   }
 
   ipoc_ = rsi_state_.ipoc;
-  out_buffer_ = RSICommand(rsi_joint_position_corrections_, digital_output_bit_, digital_output_, ipoc_, test_type_).xml_doc;
+  out_buffer_ = RSICommand(rsi_joint_position_corrections_, digital_output_bit_, digital_output_, ipoc_, test_type_OUT_).xml_doc;
   std::cout << "Out\n" << out_buffer_ << "\n";
   server_->send(out_buffer_);
   // Set receive timeout to 1 second9

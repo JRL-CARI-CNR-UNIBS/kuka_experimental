@@ -59,12 +59,13 @@ public:
     positions(DEFAULT_N_DOF, 0.0),
     initial_positions(DEFAULT_N_DOF, 0.0),
     cart_position(DEFAULT_N_DOF, 0.0),
-    initial_cart_position(DEFAULT_N_DOF, 0.0)
+    initial_cart_position(DEFAULT_N_DOF, 0.0),
+    digital_input(0)
   {
     xml_doc_.resize(1024);
   }
 
-  RSIState(std::string xml_doc);
+  RSIState(std::string xml_doc, std::string state_type);
   // AIPOS
   std::vector<double> positions;
   // ASPos
@@ -75,21 +76,26 @@ public:
   std::vector<double> initial_cart_position;
   // IPOC
   unsigned long long ipoc;
+  // Digital input
+  uint16_t digital_input;
 
 };
 
-RSIState::RSIState(std::string xml_doc) :
+RSIState::RSIState(std::string xml_doc, std::string state_type) :
   xml_doc_(xml_doc),
   positions(DEFAULT_N_DOF, 0.0),
   initial_positions(DEFAULT_N_DOF, 0.0),
   cart_position(DEFAULT_N_DOF, 0.0),
-  initial_cart_position(DEFAULT_N_DOF, 0.0)
+  initial_cart_position(DEFAULT_N_DOF, 0.0),
+  digital_input(0)
 {
   // Parse message from robot
   TiXmlDocument bufferdoc;
   bufferdoc.Parse(xml_doc_.c_str());
+
   // Get the Rob node:
   TiXmlElement* rob = bufferdoc.FirstChildElement("Rob");
+
   // Extract axis specific actual position
   TiXmlElement* AIPos_el = rob->FirstChildElement("AIPos");
   AIPos_el->Attribute("A1", &positions[0]);
@@ -98,6 +104,7 @@ RSIState::RSIState(std::string xml_doc) :
   AIPos_el->Attribute("A4", &positions[3]);
   AIPos_el->Attribute("A5", &positions[4]);
   AIPos_el->Attribute("A6", &positions[5]);
+
   // Extract axis specific setpoint position
   TiXmlElement* ASPos_el = rob->FirstChildElement("ASPos");
   ASPos_el->Attribute("A1", &initial_positions[0]);
@@ -106,6 +113,7 @@ RSIState::RSIState(std::string xml_doc) :
   ASPos_el->Attribute("A4", &initial_positions[3]);
   ASPos_el->Attribute("A5", &initial_positions[4]);
   ASPos_el->Attribute("A6", &initial_positions[5]);
+
   // Extract cartesian actual position
   TiXmlElement* RIst_el = rob->FirstChildElement("RIst");
   RIst_el->Attribute("X", &cart_position[0]);
@@ -114,6 +122,7 @@ RSIState::RSIState(std::string xml_doc) :
   RIst_el->Attribute("A", &cart_position[3]);
   RIst_el->Attribute("B", &cart_position[4]);
   RIst_el->Attribute("C", &cart_position[5]);
+
   // Extract cartesian actual position
   TiXmlElement* RSol_el = rob->FirstChildElement("RSol");
   RSol_el->Attribute("X", &initial_cart_position[0]);
@@ -122,9 +131,26 @@ RSIState::RSIState(std::string xml_doc) :
   RSol_el->Attribute("A", &initial_cart_position[3]);
   RSol_el->Attribute("B", &initial_cart_position[4]);
   RSol_el->Attribute("C", &initial_cart_position[5]);
+
   // Get the IPOC timestamp
   TiXmlElement* ipoc_el = rob->FirstChildElement("IPOC");
   ipoc = std::stoull(ipoc_el->FirstChild()->Value());
+
+  // Extract digital input values
+  if (state_type.compare("one_bit"))
+  {
+
+
+  }
+  else if (state_type.compare("array_byte"))
+  {
+
+  }
+  else // (state_type.compare("array_int16"))
+  {
+
+  }
+
 }
 
 } // namespace kuka_rsi_hw_interface
