@@ -41,24 +41,23 @@
 
 #include <stdexcept>
 
+#define DEFAULT_N_DOF 6
 
 namespace kuka_rsi_hw_interface
 {
 
 KukaHardwareInterface::KukaHardwareInterface() :
-    joint_position_(12, 0.0), joint_velocity_(12, 0.0), joint_effort_(12, 0.0), joint_position_command_(12, 0.0), joint_velocity_command_(
-        12, 0.0), joint_effort_command_(12, 0.0), joint_names_(12), rsi_initial_joint_positions_(12, 0.0), rsi_joint_position_corrections_(
-        12, 0.0), ipoc_(0), n_dof_(6), digital_output_(1,false)
+    joint_position_(DEFAULT_N_DOF, 0.0), joint_velocity_(DEFAULT_N_DOF, 0.0), joint_effort_(DEFAULT_N_DOF, 0.0),
+    joint_position_command_(DEFAULT_N_DOF, 0.0), joint_velocity_command_(DEFAULT_N_DOF, 0.0), joint_effort_command_(DEFAULT_N_DOF, 0.0),
+    joint_names_(DEFAULT_N_DOF), rsi_initial_joint_positions_(DEFAULT_N_DOF, 0.0), rsi_joint_position_corrections_(DEFAULT_N_DOF, 0.0),
+    ipoc_(0), n_dof_(DEFAULT_N_DOF), digital_output_(1,false)
 {
   in_buffer_.resize(1024);
   out_buffer_.resize(1024);
   remote_host_.resize(1024);
   remote_port_.resize(1024);
 
-  nh_.param("rsi/external_axes", external_axes_, false);
-  ROS_INFO_STREAM_NAMED("kuka_hardware_interface", "External axes: " << external_axes_);
-
-  nh_.param("rsi/n_dof", n_dof_, 6);
+  nh_.param("rsi/n_dof", n_dof_, DEFAULT_N_DOF);
   ROS_INFO_STREAM_NAMED("kuka_hardware_interface", "DOF: " << n_dof_);
 
   if (!nh_.getParam("controller_joint_names", joint_names_))
@@ -109,15 +108,9 @@ bool KukaHardwareInterface::read(const ros::Time time, const ros::Duration perio
   }
 
   rsi_state_ = RSIState(in_buffer_);
-  for (std::size_t i = 0; i < 6; ++i)
+  for (std::size_t i = 0; i < n_dof_; ++i)
   {
     joint_position_[i] = DEG2RAD * rsi_state_.positions[i];
-  }
-
-  for (std::size_t i = 6; i < n_dof_; ++i)
-  {
-    // Linear axes from KRC comes as [mm*RAD2DEG]
-    joint_position_[i] = DEG2RAD * rsi_state_.positions[i] / 1000;
   }
 
   ipoc_ = rsi_state_.ipoc;
@@ -129,18 +122,12 @@ bool KukaHardwareInterface::write(const ros::Time time, const ros::Duration peri
 {
   out_buffer_.resize(1024);
 
-  for (std::size_t i = 0; i < 6; ++i)
+  for (std::size_t i = 0; i < n_dof_; ++i)
   {
     rsi_joint_position_corrections_[i] = (RAD2DEG * joint_position_command_[i]) - rsi_initial_joint_positions_[i];
   }
 
-  for (std::size_t i = 6; i < n_dof_; ++i)
-  {
-    // Linear axes expect units in [mm]
-    rsi_joint_position_corrections_[i] = 1000 * (joint_position_command_[i] - rsi_initial_joint_positions_[i]);
-  }
-
-  out_buffer_ = RSICommand(rsi_joint_position_corrections_, digital_output_, ipoc_, external_axes_).xml_doc;
+  out_buffer_ = RSICommand(rsi_joint_position_corrections_, digital_output_, ipoc_).xml_doc;
   server_->send(out_buffer_);
 
   if(rt_rsi_send_->trylock()) {
@@ -176,26 +163,15 @@ void KukaHardwareInterface::start()
 
   rsi_state_ = RSIState(in_buffer_);
   std::cout << "In\n" << in_buffer_ << "\n";
-  for (std::size_t i = 0; i < 6; ++i)
+  for (std::size_t i = 0; i < n_dof_; ++i)
   {
     joint_position_[i] = DEG2RAD * rsi_state_.positions[i];
     joint_position_command_[i] = joint_position_[i];
     rsi_initial_joint_positions_[i] = rsi_state_.initial_positions[i];
   }
 
-  for (std::size_t i = 6; i < n_dof_; ++i)
-  {
-    joint_position_[i] = DEG2RAD * rsi_state_.positions[i] / 1000;
-    joint_position_command_[i] = joint_position_[i];
-
-    // Linear external axes have different send and recevice units.
-    // To KRC: [mm] From KRC: [mm * RAD2DEG]
-    // Store initial position in [m]
-    rsi_initial_joint_positions_[i] = joint_position_[i];
-  }
-
   ipoc_ = rsi_state_.ipoc;
-  out_buffer_ = RSICommand(rsi_joint_position_corrections_, digital_output_, ipoc_, external_axes_).xml_doc;
+  out_buffer_ = RSICommand(rsi_joint_position_corrections_, digital_output_, ipoc_).xml_doc;
   std::cout << "Out\n" << out_buffer_ << "\n";
   server_->send(out_buffer_);
   // Set receive timeout to 1 second9

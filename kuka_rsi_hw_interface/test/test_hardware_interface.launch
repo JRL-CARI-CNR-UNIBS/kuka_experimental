@@ -34,6 +34,6 @@
     <!-- <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" /> -->
 
     <!-- Load RSI simulation node -->
-    <node name='kuka_rsi_simulator' pkg='kuka_rsi_simulator' type="kuka_rsi_simulator" args="127.0.0.1 59152" if="$(arg sim)" output="screen"/>
+    <!-- <node name='kuka_rsi_simulator' pkg='kuka_rsi_simulator' type="kuka_rsi_simulator" args="127.0.0.1 59152" if="$(arg sim)" output="screen"/> -->
 
 </launch>

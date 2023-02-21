@@ -10,6 +10,6 @@
   <arg name="rsi_hw_iface_ip" default="127.0.0.1"/> <!-- 192.168.250.20 -->
   <arg name="rsi_hw_iface_port" default="59152"/>
 
-  <node pkg="kuka_rsi_simulator" type="kuka_rsi_simulator" name="kuka_rsi_simulator" args="$(arg rsi_hw_iface_ip) $(arg rsi_hw_iface_port)"/>
+  <node pkg="kuka_rsi_simulator" type="kuka_rsi_simulator" name="kuka_rsi_simulator" args="$(arg rsi_hw_iface_ip) $(arg rsi_hw_iface_port)" output="screen"/>
 
 </launch>

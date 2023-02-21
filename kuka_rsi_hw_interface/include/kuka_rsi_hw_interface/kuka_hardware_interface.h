@@ -84,7 +84,6 @@ private:
   ros::NodeHandle nh_;
 
   int n_dof_;
-  bool external_axes_;
 
   std::vector<std::string> joint_names_;
   std::vector<double> joint_position_;

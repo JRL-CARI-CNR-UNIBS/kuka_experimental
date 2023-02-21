@@ -1,4 +1,3 @@
 rsi:
-  external_axes: false
-  n_dof: 7
+  n_dof: 6
     
