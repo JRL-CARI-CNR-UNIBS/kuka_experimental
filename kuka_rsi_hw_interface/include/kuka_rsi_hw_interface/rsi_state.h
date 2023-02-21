@@ -137,19 +137,16 @@ RSIState::RSIState(std::string xml_doc, std::string state_type) :
   ipoc = std::stoull(ipoc_el->FirstChild()->Value());
 
   // Extract digital input values
+  TiXmlElement* digin_el;
   if (state_type.compare("one_bit"))
   {
-
-
+    digin_el = rob->FirstChildElement("In");
   }
-  else if (state_type.compare("array_byte"))
+  else // (state_type.compare("array_byte"))
   {
-
+    digin_el = rob->FirstChildElement("Beckhoff_IN");
   }
-  else // (state_type.compare("array_int16"))
-  {
-
-  }
+  digital_input = std::stoull(digin_el->FirstChild()->Value());
 
 }
 

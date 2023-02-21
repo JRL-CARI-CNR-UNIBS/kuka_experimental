@@ -1,4 +1,5 @@
 rsi:
   n_dof: 6
-  test_type: "one_bit"
+  test_type_IN_: "one_bit"
+  test_type_OUT_: "one_bit"
     
