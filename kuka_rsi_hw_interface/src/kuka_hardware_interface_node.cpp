@@ -60,7 +60,7 @@ int main(int argc, char** argv)
   auto stopwatch_now = stopwatch_last;
 
   //
-  ros::ServiceServer server = nh.advertiseService(ros::names::append(ros::this_node::getName(),"/write_digital_outputs"), &kuka_rsi_hw_interface::KukaHardwareInterface::write_digital_outputs, &kuka_rsi_hw_interface);
+  ros::ServiceServer server = nh.advertiseService(ros::names::append(ros::this_node::getName(),"/write_digital_outputs"), &kuka_rsi_hw_interface::KukaHardwareInterface::write_digital_output, &kuka_rsi_hw_interface);
 
   controller_manager::ControllerManager controller_manager(&kuka_rsi_hw_interface, nh);
 

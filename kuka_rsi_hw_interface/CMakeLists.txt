@@ -20,7 +20,8 @@ find_package(TinyXML REQUIRED)
 
 add_service_files(
   FILES
-  write_outputs.srv
+  write_output_bool.srv
+  write_output_bool_array.srv
 )
 
 generate_messages(

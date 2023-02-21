@@ -42,6 +42,7 @@
 #include <stdexcept>
 
 #define DEFAULT_N_DOF 6
+#define N_DIGOUT 16
 
 namespace kuka_rsi_hw_interface
 {
@@ -50,7 +51,7 @@ KukaHardwareInterface::KukaHardwareInterface() :
     joint_position_(DEFAULT_N_DOF, 0.0), joint_velocity_(DEFAULT_N_DOF, 0.0), joint_effort_(DEFAULT_N_DOF, 0.0),
     joint_position_command_(DEFAULT_N_DOF, 0.0), joint_velocity_command_(DEFAULT_N_DOF, 0.0), joint_effort_command_(DEFAULT_N_DOF, 0.0),
     joint_names_(DEFAULT_N_DOF), rsi_initial_joint_positions_(DEFAULT_N_DOF, 0.0), rsi_joint_position_corrections_(DEFAULT_N_DOF, 0.0),
-    ipoc_(0), n_dof_(DEFAULT_N_DOF), digital_output_(1,false)
+    ipoc_(0), n_dof_(DEFAULT_N_DOF), digital_output_bit_(1, false), digital_output_(0)
 {
   in_buffer_.resize(1024);
   out_buffer_.resize(1024);
@@ -58,6 +59,9 @@ KukaHardwareInterface::KukaHardwareInterface() :
   remote_port_.resize(1024);
 
   nh_.param("rsi/n_dof", n_dof_, DEFAULT_N_DOF);
+  ROS_INFO_STREAM_NAMED("kuka_hardware_interface", "DOF: " << n_dof_);
+
+  nh_.param("rsi/test_type", test_type_);
   ROS_INFO_STREAM_NAMED("kuka_hardware_interface", "DOF: " << n_dof_);
 
   if (!nh_.getParam("controller_joint_names", joint_names_))
@@ -127,7 +131,7 @@ bool KukaHardwareInterface::write(const ros::Time time, const ros::Duration peri
     rsi_joint_position_corrections_[i] = (RAD2DEG * joint_position_command_[i]) - rsi_initial_joint_positions_[i];
   }
 
-  out_buffer_ = RSICommand(rsi_joint_position_corrections_, digital_output_, ipoc_).xml_doc;
+  out_buffer_ = RSICommand(rsi_joint_position_corrections_, digital_output_bit_, digital_output_, ipoc_, test_type_).xml_doc;
   server_->send(out_buffer_);
 
   if(rt_rsi_send_->trylock()) {
@@ -138,12 +142,20 @@ bool KukaHardwareInterface::write(const ros::Time time, const ros::Duration peri
 }
 
 
-bool KukaHardwareInterface::write_digital_outputs(kuka_rsi_hw_interface::write_outputs::Request &req, kuka_rsi_hw_interface::write_outputs::Response &res)
+bool KukaHardwareInterface::write_digital_output(kuka_rsi_hw_interface::write_output_bool::Request &req, kuka_rsi_hw_interface::write_output_bool::Response &res)
 {
-  digital_output_.clear();
-  digital_output_.push_back(req.out1);
+  digital_output_bit_.clear();
+  digital_output_bit_.push_back(req.out1);
   return true;
 }
+
+
+bool KukaHardwareInterface::write_digital_output_array(kuka_rsi_hw_interface::write_output_bool_array::Request &req, kuka_rsi_hw_interface::write_output_bool_array::Response &res)
+{
+  digital_output_ = req.out;
+  return true;
+}
+
 
 void KukaHardwareInterface::start()
 {
@@ -171,7 +183,7 @@ void KukaHardwareInterface::start()
   }
 
   ipoc_ = rsi_state_.ipoc;
-  out_buffer_ = RSICommand(rsi_joint_position_corrections_, digital_output_, ipoc_).xml_doc;
+  out_buffer_ = RSICommand(rsi_joint_position_corrections_, digital_output_bit_, digital_output_, ipoc_, test_type_).xml_doc;
   std::cout << "Out\n" << out_buffer_ << "\n";
   server_->send(out_buffer_);
   // Set receive timeout to 1 second9

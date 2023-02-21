@@ -1,3 +1,4 @@
 rsi:
   n_dof: 6
+  test_type: "one_bit"
     
