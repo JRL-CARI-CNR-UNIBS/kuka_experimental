@@ -75,7 +75,12 @@ RSICommand::RSICommand(std::vector<double> joint_position_correction, std::vecto
 
   // Digital Output
   TiXmlElement* out = new TiXmlElement("Out");
-  out->SetAttribute("01", std::to_string(digital_output[0]));
+
+  std::string bool_string=std::to_string(digital_output[0]);
+
+  if (digital_output[0])
+    ROS_WARN_ONCE("questa stringa è %s",bool_string.c_str());
+  out->SetAttribute("01", bool_string);
   root->LinkEndChild(out);
 
   // External axes

@@ -141,6 +141,11 @@ bool KukaHardwareInterface::write(const ros::Time time, const ros::Duration peri
   }
 
   out_buffer_ = RSICommand(rsi_joint_position_corrections_, digital_output_, ipoc_, external_axes_).xml_doc;
+
+  ROS_WARN_ONCE("out buffer = %s",out_buffer_.c_str());
+  if (digital_output_.at(0))
+    ROS_FATAL_ONCE("out buffer = %s",out_buffer_.c_str());
+
   server_->send(out_buffer_);
 
   if(rt_rsi_send_->trylock()) {
