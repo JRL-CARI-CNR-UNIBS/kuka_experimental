@@ -61,10 +61,22 @@ KukaHardwareInterface::KukaHardwareInterface() :
   nh_.param("rsi/n_dof", n_dof_, DEFAULT_N_DOF);
   ROS_INFO_STREAM_NAMED("kuka_hardware_interface", "DOF: " << n_dof_);
 
-  nh_.param("rsi/test_type_IN", test_type_IN_);
-  ROS_INFO_STREAM_NAMED("kuka_hardware_interface", "Test type IN: " << test_type_IN_);
+  if (!nh_.getParam("rsi/test_type_IN_", test_type_IN_))
+  {
+    ROS_ERROR("Cannot find required parameter 'rsi/test_type_IN_' "
+      "on the parameter server.");
+    throw std::runtime_error("Cannot find required parameter "
+      "'rsi/test_type_IN_' on the parameter server.");
+  }
+  if (!nh_.getParam("rsi/test_type_OUT_", test_type_OUT_))
+  {
+    ROS_ERROR("Cannot find required parameter 'rsi/test_type_OUT_' "
+      "on the parameter server.");
+    throw std::runtime_error("Cannot find required parameter "
+      "'rsi/test_type_OUT_' on the parameter server.");
+  }
 
-  nh_.param("rsi/test_type_OUT", test_type_OUT_);
+  ROS_INFO_STREAM_NAMED("kuka_hardware_interface", "Test type IN: " << test_type_IN_);
   ROS_INFO_STREAM_NAMED("kuka_hardware_interface", "Test type OUT: " << test_type_OUT_);
 
   if (!nh_.getParam("controller_joint_names", joint_names_))

@@ -138,11 +138,11 @@ RSIState::RSIState(std::string xml_doc, std::string state_type) :
 
   // Extract digital input values
   TiXmlElement* digin_el;
-  if (state_type.compare("one_bit"))
+  if (not state_type.compare("one_bit"))
   {
     digin_el = rob->FirstChildElement("In");
   }
-  else // (state_type.compare("array_byte"))
+  else // (not state_type.compare("array_byte"))
   {
     digin_el = rob->FirstChildElement("Beckhoff_IN");
   }
