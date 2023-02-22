@@ -77,13 +77,13 @@ RSICommand::RSICommand(std::vector<double> joint_position_correction, std::vecto
   root->LinkEndChild(el);
 
   // Digital Output
-  if (command_type.compare("one_bit"))
+  if (not command_type.compare("one_bit"))
   {
     TiXmlElement* out = new TiXmlElement("Out");
     out->SetAttribute("01", std::to_string(digital_output_bit[0]));
     root->LinkEndChild(out);
   }
-  else if (command_type.compare("array_byte"))
+  else if (not command_type.compare("array_byte"))
   {
     uint16_t msb = (digital_output & MASK_BYTE) >> 8;
     uint16_t lsb = digital_output & (~MASK_BYTE);
@@ -93,7 +93,7 @@ RSICommand::RSICommand(std::vector<double> joint_position_correction, std::vecto
     out->SetAttribute("LSB", std::to_string(lsb));
     root->LinkEndChild(out);
   }
-  else // (command_type.compare("array_int16"))
+  else // (not command_type.compare("array_int16"))
   {
     TiXmlElement* out = new TiXmlElement("Beckhoff_OUT");
     out->SetAttribute("Out", std::to_string(digital_output));
