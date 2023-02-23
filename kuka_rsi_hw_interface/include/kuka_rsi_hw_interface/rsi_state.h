@@ -59,8 +59,7 @@ public:
     positions(DEFAULT_N_DOF, 0.0),
     initial_positions(DEFAULT_N_DOF, 0.0),
     cart_position(DEFAULT_N_DOF, 0.0),
-    initial_cart_position(DEFAULT_N_DOF, 0.0),
-    digital_input(0)
+    initial_cart_position(DEFAULT_N_DOF, 0.0)
   {
     xml_doc_.resize(1024);
   }
@@ -77,7 +76,7 @@ public:
   // IPOC
   unsigned long long ipoc;
   // Digital input
-  uint16_t digital_input;
+  unsigned long digital_input;
 
 };
 
@@ -86,8 +85,7 @@ RSIState::RSIState(std::string xml_doc, std::string state_type) :
   positions(DEFAULT_N_DOF, 0.0),
   initial_positions(DEFAULT_N_DOF, 0.0),
   cart_position(DEFAULT_N_DOF, 0.0),
-  initial_cart_position(DEFAULT_N_DOF, 0.0),
-  digital_input(0)
+  initial_cart_position(DEFAULT_N_DOF, 0.0)
 {
   // Parse message from robot
   TiXmlDocument bufferdoc;
@@ -136,17 +134,18 @@ RSIState::RSIState(std::string xml_doc, std::string state_type) :
   TiXmlElement* ipoc_el = rob->FirstChildElement("IPOC");
   ipoc = std::stoull(ipoc_el->FirstChild()->Value());
 
-  // Extract digital input values
-  TiXmlElement* digin_el;
-  if (not state_type.compare("one_bit"))
-  {
-    digin_el = rob->FirstChildElement("In");
-  }
-  else // (not state_type.compare("array_byte"))
-  {
-    digin_el = rob->FirstChildElement("Beckhoff_IN");
-  }
-  digital_input = std::stoull(digin_el->FirstChild()->Value());
+//  // Extract digital input values
+//  TiXmlElement* digin_el;
+//  if (not state_type.compare("one_bit"))
+//  {
+//    digin_el = rob->FirstChildElement("In");
+//  }
+//  else // (not state_type.compare("array_byte"))
+//  {
+//    digin_el = rob->FirstChildElement("Beckhoff_IN");
+//  }
+//  digital_input = std::stoull(digin_el->FirstChild()->Value());
+//  ROS_WARN_ONCE("Digital input buffer: %lu", digital_input);
 
 }
 

@@ -73,15 +73,18 @@ int main(int argc, char** argv)
   stopwatch_last = stopwatch_now;
 
   // Run as fast as possible
+  int cycles = 0;
   while (ros::ok())
   //while (!g_quit)
   {
+    ROS_INFO_ONCE("reading");
     // Receive current state from robot
     if (!kuka_rsi_hw_interface.read(timestamp, period))
     {
-      ROS_FATAL_NAMED("kuka_hardware_interface", "Failed to read state from robot. Shutting down!");
+      ROS_FATAL_NAMED("kuka_hardware_interface", "Failed to read state from robot. Shutting down! Cycles = %d", cycles);
       ros::shutdown();
     }
+    ROS_INFO_ONCE("read!");
 
     // Get current time and elapsed time since last read
     timestamp = ros::Time::now();
@@ -93,7 +96,11 @@ int main(int argc, char** argv)
     controller_manager.update(timestamp, period);
 
     // Send new setpoint to robot
+    ROS_INFO_ONCE("writing");
     kuka_rsi_hw_interface.write(timestamp, period);
+    ROS_INFO_ONCE("written!");
+
+    cycles++;
   }
 
   spinner.stop();

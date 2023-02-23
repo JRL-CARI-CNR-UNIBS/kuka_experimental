@@ -80,7 +80,10 @@ RSICommand::RSICommand(std::vector<double> joint_position_correction, std::vecto
   if (not command_type.compare("one_bit"))
   {
     TiXmlElement* out = new TiXmlElement("Out");
-    out->SetAttribute("01", std::to_string(digital_output_bit[0]));
+    std::string bool_string = std::to_string(digital_output_bit[0]);
+    ROS_WARN_ONCE("Output bit string: %s", bool_string.c_str());
+
+    out->SetAttribute("01", bool_string);
     root->LinkEndChild(out);
   }
   else if (not command_type.compare("array_byte"))

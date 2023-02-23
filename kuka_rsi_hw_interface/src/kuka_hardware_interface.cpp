@@ -159,6 +159,8 @@ bool KukaHardwareInterface::write(const ros::Time time, const ros::Duration peri
   out_buffer_ = RSICommand(rsi_joint_position_corrections_, digital_output_bit_, digital_output_, ipoc_, test_type_OUT_).xml_doc;
   server_->send(out_buffer_);
 
+  ROS_WARN_ONCE("Out buffer = %s",out_buffer_.c_str());
+
   if(rt_rsi_send_->trylock()) {
     rt_rsi_send_->msg_.data = out_buffer_;
     rt_rsi_send_->unlockAndPublish();
@@ -208,6 +210,8 @@ void KukaHardwareInterface::start()
   }
 
   ipoc_ = rsi_state_.ipoc;
+  digital_input_ = rsi_state_.digital_input;
+
   out_buffer_ = RSICommand(rsi_joint_position_corrections_, digital_output_bit_, digital_output_, ipoc_, test_type_OUT_).xml_doc;
   std::cout << "Out\n" << out_buffer_ << "\n";
   server_->send(out_buffer_);
