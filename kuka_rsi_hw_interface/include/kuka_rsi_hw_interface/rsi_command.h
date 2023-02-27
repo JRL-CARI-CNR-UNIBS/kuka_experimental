@@ -117,7 +117,7 @@ RSICommand::RSICommand(std::vector<double> joint_position_correction, std::vecto
 
   xml_doc = printer.Str();
 
-  ROS_WARN_ONCE("Command to be sent: %s", xml_doc.c_str());
+  ROS_WARN_ONCE("Command to be sent (previous): %s", xml_doc.c_str());
 
 }
 
