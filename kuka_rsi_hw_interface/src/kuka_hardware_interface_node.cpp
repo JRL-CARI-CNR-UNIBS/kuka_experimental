@@ -39,6 +39,7 @@
 
 #include <kuka_rsi_hw_interface/kuka_hardware_interface.h>
 
+
 int main(int argc, char** argv)
 {
   ROS_INFO_STREAM_NAMED("hardware_interface", "Starting hardware interface...");
@@ -59,8 +60,10 @@ int main(int argc, char** argv)
   auto stopwatch_last = std::chrono::steady_clock::now();
   auto stopwatch_now = stopwatch_last;
 
-  //
+  // Services to write digital output
   ros::ServiceServer server = nh.advertiseService(ros::names::append(ros::this_node::getName(),"/write_digital_output"), &kuka_rsi_hw_interface::KukaHardwareInterface::write_digital_output, &kuka_rsi_hw_interface);
+  ros::ServiceServer server_array = nh.advertiseService(ros::names::append(ros::this_node::getName(),"/write_digital_output_array"), &kuka_rsi_hw_interface::KukaHardwareInterface::write_digital_output_array, &kuka_rsi_hw_interface);
+
 
   controller_manager::ControllerManager controller_manager(&kuka_rsi_hw_interface, nh);
 
@@ -77,14 +80,14 @@ int main(int argc, char** argv)
   while (ros::ok())
   //while (!g_quit)
   {
-    ROS_INFO_ONCE("reading");
+    ROS_INFO_ONCE("Reading");
     // Receive current state from robot
     if (!kuka_rsi_hw_interface.read(timestamp, period))
     {
       ROS_FATAL_NAMED("kuka_hardware_interface", "Failed to read state from robot. Shutting down! Cycles = %d", cycles);
       ros::shutdown();
     }
-    ROS_INFO_ONCE("read!");
+    ROS_INFO_ONCE("Read!");
 
     // Get current time and elapsed time since last read
     timestamp = ros::Time::now();
@@ -96,9 +99,9 @@ int main(int argc, char** argv)
     controller_manager.update(timestamp, period);
 
     // Send new setpoint to robot
-    ROS_INFO_ONCE("writing");
+    ROS_INFO_ONCE("Writing");
     kuka_rsi_hw_interface.write(timestamp, period);
-    ROS_INFO_ONCE("written!");
+    ROS_INFO_ONCE("Written!");
 
     cycles++;
   }

@@ -92,15 +92,19 @@ RSICommand::RSICommand(std::vector<double> joint_position_correction, std::vecto
     uint16_t lsb = digital_output & (~MASK_BYTE);
 
     TiXmlElement* out = new TiXmlElement("Beckhoff_OUT");
-    out->SetAttribute("MSB", std::to_string(msb));
     out->SetAttribute("LSB", std::to_string(lsb));
+    out->SetAttribute("MSB", std::to_string(msb));
     root->LinkEndChild(out);
   }
-  else // (not command_type.compare("array_int16"))
+  else if (not command_type.compare("array_int16"))
   {
     TiXmlElement* out = new TiXmlElement("Beckhoff_OUT");
     out->SetAttribute("Out", std::to_string(digital_output));
     root->LinkEndChild(out);
+  }
+  else // (not command_type.compare("none"))
+  {
+    ROS_WARN_ONCE("No command.");
   }
 
   el = new TiXmlElement("IPOC");
@@ -112,6 +116,9 @@ RSICommand::RSICommand(std::vector<double> joint_position_correction, std::vecto
   doc.Accept(&printer);
 
   xml_doc = printer.Str();
+
+  ROS_WARN_ONCE("Command to be sent: %s", xml_doc.c_str());
+
 }
 
 } // namespace kuka_rsi_hw_interface

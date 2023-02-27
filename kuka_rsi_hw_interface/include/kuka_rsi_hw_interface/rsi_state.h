@@ -42,6 +42,7 @@
 #include <string>
 #include <tinyxml.h>
 #include <vector>
+#include <bitset>
 
 #define DEFAULT_N_DOF 6
 
@@ -59,7 +60,9 @@ public:
     positions(DEFAULT_N_DOF, 0.0),
     initial_positions(DEFAULT_N_DOF, 0.0),
     cart_position(DEFAULT_N_DOF, 0.0),
-    initial_cart_position(DEFAULT_N_DOF, 0.0)
+    initial_cart_position(DEFAULT_N_DOF, 0.0),
+    digital_input_bit(false),
+    digital_input(0)
   {
     xml_doc_.resize(1024);
   }
@@ -76,6 +79,7 @@ public:
   // IPOC
   unsigned long long ipoc;
   // Digital input
+  bool digital_input_bit;
   unsigned long digital_input;
 
 };
@@ -85,13 +89,26 @@ RSIState::RSIState(std::string xml_doc, std::string state_type) :
   positions(DEFAULT_N_DOF, 0.0),
   initial_positions(DEFAULT_N_DOF, 0.0),
   cart_position(DEFAULT_N_DOF, 0.0),
-  initial_cart_position(DEFAULT_N_DOF, 0.0)
+  initial_cart_position(DEFAULT_N_DOF, 0.0),
+  digital_input_bit(false),
+  digital_input(0)
 {
+  ROS_WARN_ONCE("String passed to RSIState object: %s", xml_doc_.c_str());
+
   // Parse message from robot
   TiXmlDocument bufferdoc;
   bufferdoc.Parse(xml_doc_.c_str());
 
-  // Get the Rob node:
+  // Declare a printer
+  TiXmlPrinter printer;
+  // attach it to the document you want to convert in to a std::string
+  bufferdoc.Accept(&printer);
+  // Create a std::string and copy your document data in to the string
+  std::string parsed_string = printer.CStr();
+
+  ROS_WARN_ONCE("String parsed inside RSIState object by TiXmlDocument: %s", parsed_string.c_str());
+
+  // Get the Rob node
   TiXmlElement* rob = bufferdoc.FirstChildElement("Rob");
 
   // Extract axis specific actual position
@@ -130,22 +147,33 @@ RSIState::RSIState(std::string xml_doc, std::string state_type) :
   RSol_el->Attribute("B", &initial_cart_position[4]);
   RSol_el->Attribute("C", &initial_cart_position[5]);
 
+  // Extract digital input values
+  TiXmlElement* digin_el;
+  if (not state_type.compare("one_bit"))
+  {
+    ROS_WARN_ONCE("Saving one bit: ");
+    digin_el = rob->FirstChildElement("In");
+    digin_el->QueryBoolAttribute("01", &digital_input_bit);
+    std::string bool_string = std::to_string(digital_input_bit);
+    ROS_WARN_ONCE("Input bit string: %s", bool_string.c_str());
+  }
+  else if (not state_type.compare("array_byte"))
+  {
+    ROS_WARN_ONCE("Saving one byte: ");
+    digin_el = rob->FirstChildElement("Beckhoff_IN");
+    digital_input = std::stoul(digin_el->FirstChild()->Value());
+    ROS_WARN_ONCE("Digital input buffer: %lu", digital_input);
+  }
+  else // (not state_type.compare("none"))
+  {
+    ROS_WARN_ONCE("No saving.");
+  }
+
   // Get the IPOC timestamp
   TiXmlElement* ipoc_el = rob->FirstChildElement("IPOC");
   ipoc = std::stoull(ipoc_el->FirstChild()->Value());
 
-//  // Extract digital input values
-//  TiXmlElement* digin_el;
-//  if (not state_type.compare("one_bit"))
-//  {
-//    digin_el = rob->FirstChildElement("In");
-//  }
-//  else // (not state_type.compare("array_byte"))
-//  {
-//    digin_el = rob->FirstChildElement("Beckhoff_IN");
-//  }
-//  digital_input = std::stoull(digin_el->FirstChild()->Value());
-//  ROS_WARN_ONCE("Digital input buffer: %lu", digital_input);
+  ROS_WARN_ONCE("Reading complete.");
 
 }
 

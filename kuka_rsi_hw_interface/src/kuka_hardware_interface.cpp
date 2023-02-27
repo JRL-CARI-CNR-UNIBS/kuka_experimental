@@ -159,7 +159,7 @@ bool KukaHardwareInterface::write(const ros::Time time, const ros::Duration peri
   out_buffer_ = RSICommand(rsi_joint_position_corrections_, digital_output_bit_, digital_output_, ipoc_, test_type_OUT_).xml_doc;
   server_->send(out_buffer_);
 
-  ROS_WARN_ONCE("Out buffer = %s",out_buffer_.c_str());
+//  ROS_WARN_ONCE("Out buffer = %s",out_buffer_.c_str());
 
   if(rt_rsi_send_->trylock()) {
     rt_rsi_send_->msg_.data = out_buffer_;
@@ -173,6 +173,7 @@ bool KukaHardwareInterface::write_digital_output(kuka_rsi_hw_interface::write_ou
 {
   digital_output_bit_.clear();
   digital_output_bit_.push_back(req.out1);
+  std::cout << "Command sent: " << out_buffer_.c_str() << std::endl;
   return true;
 }
 
@@ -180,6 +181,7 @@ bool KukaHardwareInterface::write_digital_output(kuka_rsi_hw_interface::write_ou
 bool KukaHardwareInterface::write_digital_output_array(kuka_rsi_hw_interface::write_output_bool_array::Request &req, kuka_rsi_hw_interface::write_output_bool_array::Response &res)
 {
   digital_output_ = req.out;
+  std::cout << "Command sent: " << out_buffer_.c_str() << std::endl;
   return true;
 }
 
@@ -200,8 +202,13 @@ void KukaHardwareInterface::start()
     bytes = server_->recv(in_buffer_);
   }
 
+  ROS_WARN_ONCE("State buffer: ");
+  std::cout << in_buffer_ << std::endl;
+
+  ROS_WARN_ONCE("Reading state in start function...");
   rsi_state_ = RSIState(in_buffer_, test_type_IN_);
-  std::cout << "In\n" << in_buffer_ << "\n";
+  ROS_WARN_ONCE("State read in start function.");
+
   for (std::size_t i = 0; i < n_dof_; ++i)
   {
     joint_position_[i] = DEG2RAD * rsi_state_.positions[i];
@@ -212,8 +219,10 @@ void KukaHardwareInterface::start()
   ipoc_ = rsi_state_.ipoc;
   digital_input_ = rsi_state_.digital_input;
 
+  ROS_WARN_ONCE("Sending command in start function...");
   out_buffer_ = RSICommand(rsi_joint_position_corrections_, digital_output_bit_, digital_output_, ipoc_, test_type_OUT_).xml_doc;
-  std::cout << "Out\n" << out_buffer_ << "\n";
+  ROS_WARN_ONCE("Command sent in start function.");
+
   server_->send(out_buffer_);
   // Set receive timeout to 1 second9
   server_->set_timeout(1000);
