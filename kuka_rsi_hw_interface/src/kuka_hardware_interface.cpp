@@ -52,7 +52,7 @@ KukaHardwareInterface::KukaHardwareInterface() :
     joint_position_command_(DEFAULT_N_DOF, 0.0), joint_velocity_command_(DEFAULT_N_DOF, 0.0), joint_effort_command_(DEFAULT_N_DOF, 0.0),
     joint_names_(DEFAULT_N_DOF), rsi_initial_joint_positions_(DEFAULT_N_DOF, 0.0), rsi_joint_position_corrections_(DEFAULT_N_DOF, 0.0),
     ipoc_(0), n_dof_(DEFAULT_N_DOF), digital_output_bit_(1, false), digital_output_(2, 0), digital_input_bit_(1, false),
-    digital_input_(2, 0)
+    digital_input_(2, 1)
 {
   in_buffer_.resize(1024);
   out_buffer_.resize(1024);
@@ -140,11 +140,12 @@ bool KukaHardwareInterface::read(const ros::Time time, const ros::Duration perio
   {
     return false;
   }
-
+//ROS_WARN("here1");
   if (rt_rsi_recv_->trylock()){
     rt_rsi_recv_->msg_.data = in_buffer_;
     rt_rsi_recv_->unlockAndPublish();
   }
+//ROS_WARN("here2");
 
   rsi_state_ = RSIState(in_buffer_, test_type_IN_);
   for (std::size_t i = 0; i < n_dof_; ++i)
@@ -168,10 +169,15 @@ bool KukaHardwareInterface::read(const ros::Time time, const ros::Duration perio
     std_msgs::UInt16 msg;
     msg.data = rsi_state_.digital_input_beckhoff;
     digital_input_[0] = rsi_state_.digital_input_beckhoff;
-    std::cout << digital_input_[0] <<std::endl;
+    std::cout << digital_input_[0] << std::endl;
   }
   else if (not test_type_IN_.compare("array_uint16_2ins"))
   {
+      digital_input_[0] = rsi_state_.digital_input_beckhoff;
+      // std::cout << "Beckhoff: " << digital_input_[0] << std::endl;
+      digital_input_[1] = rsi_state_.digital_input_odot;
+      // std::cout << "Odot: " << digital_input_[1] << std::endl;
+
 //    std_msgs::UInt16MultiArray msg;
 
 //    digital_input_ = rsi_state_.digital_input_beckhoff;
@@ -245,6 +251,7 @@ void KukaHardwareInterface::start()
   ROS_INFO_STREAM_NAMED("kuka_hardware_interface", "Waiting for robot!");
 
   int bytes = server_->recv(in_buffer_);
+  ROS_WARN_STREAM("in_buffer_n bytes received: " << bytes);
 
   // Drop empty <rob> frame with RSI <= 2.3
   if (bytes < 100)
@@ -252,8 +259,7 @@ void KukaHardwareInterface::start()
     bytes = server_->recv(in_buffer_);
   }
 
-  ROS_WARN_ONCE("State buffer: ");
-  std::cout << in_buffer_ << std::endl;
+  ROS_WARN_STREAM("State buffer: " << in_buffer_);
 
   ROS_WARN_ONCE("Reading state in start function...");
   rsi_state_ = RSIState(in_buffer_, test_type_IN_);
@@ -273,7 +279,7 @@ void KukaHardwareInterface::start()
   ROS_WARN_ONCE("Command sent in start function.");
 
   server_->send(out_buffer_);
-  // Set receive timeout to 1 second9
+  // Set receive timeout to 1 second
   server_->set_timeout(1000);
   ROS_INFO_STREAM_NAMED("kuka_hardware_interface", "Got connection from robot");
 

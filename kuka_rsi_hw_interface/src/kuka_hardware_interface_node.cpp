@@ -63,6 +63,7 @@ int main(int argc, char** argv)
   // Services to write digital output
   ros::ServiceServer server = nh.advertiseService(ros::names::append(ros::this_node::getName(),"/write_digital_output"), &kuka_rsi_hw_interface::KukaHardwareInterface::write_digital_output, &kuka_rsi_hw_interface);
   ros::ServiceServer server_array = nh.advertiseService(ros::names::append(ros::this_node::getName(),"/write_digital_output_array"), &kuka_rsi_hw_interface::KukaHardwareInterface::write_digital_output_array, &kuka_rsi_hw_interface);
+  ros::ServiceServer server_array_2outs = nh.advertiseService(ros::names::append(ros::this_node::getName(),"/write_digital_output_array_2outs"), &kuka_rsi_hw_interface::KukaHardwareInterface::write_digital_output_array_2outs, &kuka_rsi_hw_interface);
 
 
   controller_manager::ControllerManager controller_manager(&kuka_rsi_hw_interface, nh);

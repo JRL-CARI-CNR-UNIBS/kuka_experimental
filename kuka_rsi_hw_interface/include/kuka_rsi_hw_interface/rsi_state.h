@@ -151,9 +151,9 @@ RSIState::RSIState(std::string xml_doc, std::string state_type) :
   RSol_el->Attribute("C", &initial_cart_position[5]);
 
   // Extract digital input values
-  TiXmlElement* digin_el;
   if (not state_type.compare("one_bit"))
   {
+    TiXmlElement* digin_el;
     digin_el = rob->FirstChildElement("Beckhoff_IN");
     std::string bool_string = digin_el->FirstChild()->Value();
     digital_input_bit = (((uint16_t) std::stoul(bool_string)) % 2 == 1); // check if the first bit (LSB) is 1
@@ -161,19 +161,22 @@ RSIState::RSIState(std::string xml_doc, std::string state_type) :
   }
   else if (not state_type.compare("array_uint16"))
   {
+    TiXmlElement* digin_el;
     digin_el = rob->FirstChildElement("Beckhoff_IN");
     digital_input_beckhoff = (uint16_t) std::stoul(digin_el->FirstChild()->Value());
-    ROS_WARN("Beckhoff: digital input buffer: %u", digital_input_beckhoff);
+    ROS_WARN_ONCE("Beckhoff - digital input buffer: %u", digital_input_beckhoff);
   }
   else if (not state_type.compare("array_uint16_2ins"))
   {
-    digin_el = rob->FirstChildElement("Beckhoff_IN");
-    digital_input_beckhoff = (uint16_t) std::stoul(digin_el->FirstChild()->Value());
-    ROS_WARN_ONCE("Beckhoff: digital input buffer: %u", digital_input_beckhoff);
+    TiXmlElement* digin_el_beck;
+    digin_el_beck = rob->FirstChildElement("Beckhoff_IN");
+    digital_input_beckhoff = (uint16_t) std::stoul(digin_el_beck->FirstChild()->Value());
+    ROS_WARN("Beckhoff - digital input buffer: %u", digital_input_beckhoff);
 
-    digin_el = rob->FirstChildElement("Odot_IN");
-    digital_input_odot = (uint16_t) std::stoul(digin_el->FirstChild()->Value());
-    ROS_WARN_ONCE("Odot digital input buffer: %u", digital_input_odot);
+    TiXmlElement* digin_el_odot;
+    digin_el_odot = rob->FirstChildElement("Odot_IN");
+    digital_input_odot = (uint16_t) std::stoul(digin_el_odot->FirstChild()->Value());
+    ROS_WARN("Odot - digital input buffer: %u", digital_input_odot);
   }
   else // (not state_type.compare("none"))
   {
