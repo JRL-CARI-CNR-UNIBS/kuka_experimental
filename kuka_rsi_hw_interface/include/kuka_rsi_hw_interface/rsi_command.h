@@ -52,7 +52,7 @@ class RSICommand
 {
 public:
   RSICommand();
-  RSICommand(std::vector<double> position_corrections, std::vector<bool> digital_output_bit, uint16_t digital_output, unsigned long long ipoc, std::string command_type);
+  RSICommand(std::vector<double> position_corrections, std::vector<bool> digital_output_bit, std::vector<uint16_t> digital_output, unsigned long long ipoc, std::string command_type);
   std::string xml_doc;
 };
 
@@ -61,7 +61,7 @@ RSICommand::RSICommand()
   // Intentionally empty
 }
 
-RSICommand::RSICommand(std::vector<double> joint_position_correction, std::vector<bool> digital_output_bit, uint16_t digital_output, unsigned long long ipoc, std::string command_type)
+RSICommand::RSICommand(std::vector<double> joint_position_correction, std::vector<bool> digital_output_bit, std::vector<uint16_t> digital_output, unsigned long long ipoc, std::string command_type)
 {
   TiXmlDocument doc;
   TiXmlElement* root = new TiXmlElement("Sen");
@@ -86,21 +86,36 @@ RSICommand::RSICommand(std::vector<double> joint_position_correction, std::vecto
     out->SetAttribute("01", bool_string);
     root->LinkEndChild(out);
   }
-  else if (not command_type.compare("array_byte"))
-  {
-    uint16_t msb = (digital_output & MASK_BYTE) >> 8;
-    uint16_t lsb = digital_output & (~MASK_BYTE);
+//  else if (not command_type.compare("array_byte"))
+//  {
+//    uint16_t msb = (digital_output & MASK_BYTE) >> 8;
+//    uint16_t lsb = digital_output & (~MASK_BYTE);
 
-    TiXmlElement* out = new TiXmlElement("Beckhoff_OUT");
-    out->SetAttribute("LSB", std::to_string(lsb));
-    out->SetAttribute("MSB", std::to_string(msb));
-    root->LinkEndChild(out);
-  }
-  else if (not command_type.compare("array_int16"))
+//    TiXmlElement* out = new TiXmlElement("Beckhoff_OUT");
+//    out->SetAttribute("LSB", std::to_string(lsb));
+//    out->SetAttribute("MSB", std::to_string(msb));
+//    root->LinkEndChild(out);
+//  }
+  else if (not command_type.compare("array_uint16"))
   {
-    TiXmlElement* out = new TiXmlElement("Beckhoff_OUT");
-    out->SetAttribute("Out", std::to_string(digital_output));
-    root->LinkEndChild(out);
+    TiXmlElement* out_beckhoff = new TiXmlElement("Beckhoff_OUT");
+    out_beckhoff->LinkEndChild(new TiXmlText(std::to_string(digital_output[0])));
+//    out->SetAttribute("Out", std::to_string(digital_output[0]));
+    root->LinkEndChild(out_beckhoff);
+  }
+  else if (not command_type.compare("array_uint16_2outs"))
+  {
+    TiXmlElement* out_beckhoff = new TiXmlElement("Beckhoff_OUT");
+    out_beckhoff->LinkEndChild(new TiXmlText(std::to_string(digital_output[0])));
+
+//    out->SetAttribute("Out", std::to_string(digital_output[0]));
+    root->LinkEndChild(out_beckhoff);
+
+    TiXmlElement* out_odot = new TiXmlElement("Odot_OUT");
+    out_odot->LinkEndChild(new TiXmlText(std::to_string(digital_output[1])));
+
+//    out->SetAttribute("Out", std::to_string(digital_output[1]));
+    root->LinkEndChild(out_odot);
   }
   else // (not command_type.compare("none"))
   {
@@ -110,11 +125,12 @@ RSICommand::RSICommand(std::vector<double> joint_position_correction, std::vecto
   el = new TiXmlElement("IPOC");
   el->LinkEndChild(new TiXmlText(std::to_string(ipoc)));
   root->LinkEndChild(el);
+
   doc.LinkEndChild(root);
+
   TiXmlPrinter printer;
   printer.SetStreamPrinting();
   doc.Accept(&printer);
-
   xml_doc = printer.Str();
 
   ROS_WARN_ONCE("Command to be sent (previous): %s", xml_doc.c_str());

@@ -47,7 +47,9 @@
 // ROS
 #include <ros/ros.h>
 #include <std_msgs/String.h>
+#include <std_msgs/Bool.h>
 #include <std_msgs/UInt16.h>
+#include <std_msgs/UInt16MultiArray.h>
 
 
 // ros_control
@@ -70,6 +72,7 @@
 //SRV
 #include <kuka_rsi_hw_interface/write_output_bool.h>
 #include <kuka_rsi_hw_interface/write_output_bool_array.h>
+#include <kuka_rsi_hw_interface/write_output_bool_array_2outs.h>
 
 
 namespace kuka_rsi_hw_interface
@@ -98,7 +101,7 @@ private:
   std::vector<double> joint_velocity_command_;
   std::vector<double> joint_effort_command_;
   std::vector<bool> digital_output_bit_;
-  uint16_t digital_output_;
+  std::vector<uint16_t> digital_output_;
   uint16_t digital_input_;
 
   // RSI
@@ -143,6 +146,7 @@ public:
 
   bool write_digital_output(kuka_rsi_hw_interface::write_output_bool::Request &req, kuka_rsi_hw_interface::write_output_bool::Response &res);
   bool write_digital_output_array(kuka_rsi_hw_interface::write_output_bool_array::Request &req, kuka_rsi_hw_interface::write_output_bool_array::Response &res);
+  bool write_digital_output_array_2outs(kuka_rsi_hw_interface::write_output_bool_array_2outs::Request &req, kuka_rsi_hw_interface::write_output_bool_array_2outs::Response &res);
 
 };
 

@@ -22,6 +22,7 @@ add_service_files(
   FILES
   write_output_bool.srv
   write_output_bool_array.srv
+  write_output_bool_array_2outs.srv
 )
 
 generate_messages(

@@ -62,7 +62,8 @@ public:
     cart_position(DEFAULT_N_DOF, 0.0),
     initial_cart_position(DEFAULT_N_DOF, 0.0),
     digital_input_bit(false),
-    digital_input(0)
+    digital_input_beckhoff(0),
+    digital_input_odot(0)
   {
     xml_doc_.resize(1024);
   }
@@ -80,7 +81,8 @@ public:
   unsigned long long ipoc;
   // Digital input
   bool digital_input_bit;
-  unsigned long digital_input;
+  unsigned long digital_input_beckhoff;
+  unsigned long digital_input_odot;
 
 };
 
@@ -91,7 +93,8 @@ RSIState::RSIState(std::string xml_doc, std::string state_type) :
   cart_position(DEFAULT_N_DOF, 0.0),
   initial_cart_position(DEFAULT_N_DOF, 0.0),
   digital_input_bit(false),
-  digital_input(0)
+  digital_input_beckhoff(0),
+  digital_input_odot(0)
 {
   ROS_WARN_ONCE("String passed to RSIState object: %s", xml_doc_.c_str());
 
@@ -151,18 +154,26 @@ RSIState::RSIState(std::string xml_doc, std::string state_type) :
   TiXmlElement* digin_el;
   if (not state_type.compare("one_bit"))
   {
-    ROS_WARN_ONCE("Saving one bit: ");
-    digin_el = rob->FirstChildElement("In");
-    digin_el->QueryBoolAttribute("01", &digital_input_bit);
-    std::string bool_string = std::to_string(digital_input_bit);
+    digin_el = rob->FirstChildElement("Beckhoff_IN");
+    std::string bool_string = digin_el->FirstChild()->Value();
+    digital_input_bit = (bool_string == "1");
     ROS_WARN_ONCE("Input bit string: %s", bool_string.c_str());
   }
-  else if (not state_type.compare("array_byte"))
+  else if (not state_type.compare("array_uint16"))
   {
-    ROS_WARN_ONCE("Saving one byte: ");
     digin_el = rob->FirstChildElement("Beckhoff_IN");
-    digital_input = std::stoul(digin_el->FirstChild()->Value());
-    ROS_WARN_ONCE("Digital input buffer: %lu", digital_input);
+    digital_input_beckhoff = std::stoul(digin_el->FirstChild()->Value());
+    ROS_WARN_ONCE("Beckhoff: digital input buffer: %lu", digital_input_beckhoff);
+  }
+  else if (not state_type.compare("array_uint16_2ins"))
+  {
+    digin_el = rob->FirstChildElement("Beckhoff_IN");
+    digital_input_beckhoff = std::stoul(digin_el->FirstChild()->Value());
+    ROS_WARN_ONCE("Beckhoff: digital input buffer: %lu", digital_input_beckhoff);
+
+    digin_el = rob->FirstChildElement("Odot_IN");
+    digital_input_odot = std::stoul(digin_el->FirstChild()->Value());
+    ROS_WARN_ONCE("Odot digital input buffer: %lu", digital_input_odot);
   }
   else // (not state_type.compare("none"))
   {
