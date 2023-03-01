@@ -51,7 +51,7 @@ KukaHardwareInterface::KukaHardwareInterface() :
     joint_position_(DEFAULT_N_DOF, 0.0), joint_velocity_(DEFAULT_N_DOF, 0.0), joint_effort_(DEFAULT_N_DOF, 0.0),
     joint_position_command_(DEFAULT_N_DOF, 0.0), joint_velocity_command_(DEFAULT_N_DOF, 0.0), joint_effort_command_(DEFAULT_N_DOF, 0.0),
     joint_names_(DEFAULT_N_DOF), rsi_initial_joint_positions_(DEFAULT_N_DOF, 0.0), rsi_joint_position_corrections_(DEFAULT_N_DOF, 0.0),
-    ipoc_(0), n_dof_(DEFAULT_N_DOF), digital_output_bit_(1, false), digital_output_(2, 0), digital_input_bit_(1, false),
+    ipoc_(0), n_dof_(DEFAULT_N_DOF), digital_output_bit_(1, false), digital_output_(2, 0), digital_input_bit_(2, false),
     digital_input_(2, 1)
 {
   in_buffer_.resize(1024);
@@ -159,32 +159,29 @@ bool KukaHardwareInterface::read(const ros::Time time, const ros::Duration perio
   std_msgs::Empty msg;
   if (not test_type_IN_.compare("one_bit"))
   {
-    std_msgs::Bool msg;
-    msg.data = rsi_state_.digital_input_bit;
-    digital_input_bit_[0] = rsi_state_.digital_input_bit;
-    std::cout << digital_input_bit_[0] <<std::endl;
+    // std_msgs::Bool msg;
+    // msg.data = rsi_state_.digital_input_bit_1;
+    digital_input_bit_[0] = rsi_state_.digital_input_bit_1;
+    digital_input_bit_[1] = rsi_state_.digital_input_bit_2;
+    std::cout << "( " << digital_input_bit_[0] << ", " << digital_input_bit_[1] <<std::endl;
   }
   else if (not test_type_IN_.compare("array_uint16"))
   {
-    std_msgs::UInt16 msg;
-    msg.data = rsi_state_.digital_input_beckhoff;
+    // std_msgs::UInt16 msg;
+    // msg.data = rsi_state_.digital_input_beckhoff;
     digital_input_[0] = rsi_state_.digital_input_beckhoff;
-    std::cout << digital_input_[0] << std::endl;
+    // std::cout << digital_input_[0] << std::endl;
   }
   else if (not test_type_IN_.compare("array_uint16_2ins"))
   {
       digital_input_[0] = rsi_state_.digital_input_beckhoff;
-      // std::cout << "Beckhoff: " << digital_input_[0] << std::endl;
+      std::cout << "Beckhoff: " << digital_input_[0] << std::endl;
       digital_input_[1] = rsi_state_.digital_input_odot;
-      // std::cout << "Odot: " << digital_input_[1] << std::endl;
+      std::cout << "Odot: " << digital_input_[1] << std::endl;
 
-//    std_msgs::UInt16MultiArray msg;
-
-//    digital_input_ = rsi_state_.digital_input_beckhoff;
-//    msg.data[0] = digital_input_;
-
-//    digital_input_ = rsi_state_.digital_input_odot;
-//    msg.data[1] = digital_input_;
+    std_msgs::UInt16 msg[2];
+    msg[0].data = digital_input_[0];
+    msg[1].data = digital_input_[1];
   }
   else // (not test_type_IN_.compare("none"))
   {

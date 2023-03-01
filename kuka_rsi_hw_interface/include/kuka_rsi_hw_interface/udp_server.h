@@ -114,35 +114,25 @@ public:
   {
     ssize_t bytes = 0;
 
-//    std::cout << "Before timeout" << std::endl;
-
     if (timeout_)
     {
       fd_set read_fds;
       FD_ZERO(&read_fds);
       FD_SET(sockfd_, &read_fds);
 
-//      std::cout << "Before timeval" << std::endl;
-
       struct timeval tv;
       tv.tv_sec = tv_.tv_sec;
       tv.tv_usec = tv_.tv_usec;
-//      std::cout << "Before select" << std::endl;
 
       if (select(sockfd_+1, &read_fds, NULL, NULL, &tv) < 0)
       {
-//        std::cout << "In if select" << std::endl;
         return 0;
       }
 
-//      std::cout << "After select" << std::endl;
       if (FD_ISSET(sockfd_, &read_fds))
       {
-//        std::cout << "timeout: Before memset" << std::endl;
         memset(buffer_, 0, BUFSIZE);
-//        std::cout << "timeout: Before recvfrom" << std::endl;
         bytes = recvfrom(sockfd_, buffer_, BUFSIZE, 0, (struct sockaddr *) &clientaddr_, &clientlen_);
-//        std::cout << "timeout: " << bytes << std::endl;
         if (bytes < 0)
         {
           std::cout << "ERROR in recvfrom" << std::endl;
@@ -150,31 +140,21 @@ public:
       }
       else
       {
-        // RIMUOVERE
-          memset(buffer_, 0, BUFSIZE);
-          bytes = recvfrom(sockfd_, buffer_, BUFSIZE, 0, (struct sockaddr *) &clientaddr_, &clientlen_);
-          //
-        std::cout << "FD_ISSET ret false, " << bytes << std::endl;
         return 0;
       }
 
     }
     else
     {
-      std::cout << "NOT timeout: Before memset" << std::endl;
       memset(buffer_, 0, BUFSIZE);
-      std::cout << "NOT timeout: Before recvfrom" << std::endl;
       bytes = recvfrom(sockfd_, buffer_, BUFSIZE, 0, (struct sockaddr *) &clientaddr_, &clientlen_);
-      std::cout << "NOT timeout: " << bytes << std::endl;
       if (bytes < 0)
       {
         std::cout << "ERROR in recvfrom" << std::endl;
       }
     }
 
-//    std::cout << "Before buffer" << std::endl;
     buffer = std::string(buffer_);
-//    std::cout << "Before buffer" << std::endl;
 
     return bytes;
   }

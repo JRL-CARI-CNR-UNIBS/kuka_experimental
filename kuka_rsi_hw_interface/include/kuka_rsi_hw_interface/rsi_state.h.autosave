@@ -188,19 +188,20 @@ RSIState::RSIState(std::string xml_doc, std::string state_type) :
 //    digin_el_odot = rob->FirstChildElement("Odot_IN");
 //    digital_input_odot = (uint16_t) std::stoull(digin_el_odot->FirstChild()->Value());
 //    ROS_WARN("Odot - digital input buffer: %us", digital_input_odot);
-
-    TiXmlElement* digin_el;
-    digin_el = rob->FirstChildElement("Beckhoff_IN");
-    std::string bool_string_1 = digin_el->FirstChild()->Value();
+    
+    TiXmlElement* digin_el_1;
+    digin_el_1 = rob->FirstChildElement("Beckhoff_IN");
+    std::string bool_string_1 = digin_el_1->FirstChild()->Value();
     //digital_input_bit_1 = (((uint16_t) std::stoul(bool_string_1)) % 2 == 1); // check if the first bit (LSB) is 1
-    std::istringstream(bool_string_1) >> digital_input_beckhoff;
-    ROS_WARN("Beckhoff - digital input buffer: %s", bool_string_1.c_str());
+    std::istringstream(bool_string_1) >> digital_input_bit_1;
+    ROS_WARN("Input bit string: %s", bool_string_1.c_str());
 
-    digin_el = rob->FirstChildElement("Odot_IN");
-    std::string bool_string_2 = digin_el->FirstChild()->Value();
+    TiXmlElement* digin_el_2;
+    digin_el_2 = rob->FirstChildElement("Delta_IN");
+    std::string bool_string_2 = digin_el_2->FirstChild()->Value();
     //digital_input_bit_1 = (((uint16_t) std::stoul(bool_string_2)) % 2 == 1); // check if the first bit (LSB) is 1
-    std::istringstream(bool_string_2) >> digital_input_odot;
-    ROS_WARN("Odot - digital input buffer: %s", bool_string_2.c_str());
+    std::istringstream(bool_string_2) >> digital_input_bit_2;
+    ROS_WARN("Input bit string: %s", bool_string_2.c_str());
   }
   else // (not state_type.compare("none"))
   {
