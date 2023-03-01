@@ -81,8 +81,8 @@ public:
   unsigned long long ipoc;
   // Digital input
   bool digital_input_bit;
-  unsigned long digital_input_beckhoff;
-  unsigned long digital_input_odot;
+  uint16_t digital_input_beckhoff;
+  uint16_t digital_input_odot;
 
 };
 
@@ -156,24 +156,24 @@ RSIState::RSIState(std::string xml_doc, std::string state_type) :
   {
     digin_el = rob->FirstChildElement("Beckhoff_IN");
     std::string bool_string = digin_el->FirstChild()->Value();
-    digital_input_bit = (bool_string == "1");
+    digital_input_bit = (((uint16_t) std::stoul(bool_string)) % 2 == 1); // check if the first bit (LSB) is 1
     ROS_WARN_ONCE("Input bit string: %s", bool_string.c_str());
   }
   else if (not state_type.compare("array_uint16"))
   {
     digin_el = rob->FirstChildElement("Beckhoff_IN");
-    digital_input_beckhoff = std::stoul(digin_el->FirstChild()->Value());
-    ROS_WARN_ONCE("Beckhoff: digital input buffer: %lu", digital_input_beckhoff);
+    digital_input_beckhoff = (uint16_t) std::stoul(digin_el->FirstChild()->Value());
+    ROS_WARN("Beckhoff: digital input buffer: %u", digital_input_beckhoff);
   }
   else if (not state_type.compare("array_uint16_2ins"))
   {
     digin_el = rob->FirstChildElement("Beckhoff_IN");
-    digital_input_beckhoff = std::stoul(digin_el->FirstChild()->Value());
-    ROS_WARN_ONCE("Beckhoff: digital input buffer: %lu", digital_input_beckhoff);
+    digital_input_beckhoff = (uint16_t) std::stoul(digin_el->FirstChild()->Value());
+    ROS_WARN_ONCE("Beckhoff: digital input buffer: %u", digital_input_beckhoff);
 
     digin_el = rob->FirstChildElement("Odot_IN");
-    digital_input_odot = std::stoul(digin_el->FirstChild()->Value());
-    ROS_WARN_ONCE("Odot digital input buffer: %lu", digital_input_odot);
+    digital_input_odot = (uint16_t) std::stoul(digin_el->FirstChild()->Value());
+    ROS_WARN_ONCE("Odot digital input buffer: %u", digital_input_odot);
   }
   else // (not state_type.compare("none"))
   {

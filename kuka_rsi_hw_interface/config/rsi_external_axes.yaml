@@ -1,5 +1,5 @@
 rsi:
   n_dof: 6
-  test_type_IN_: "one_bit"
+  test_type_IN_: "array_uint16"
   test_type_OUT_: "array_uint16"
     

@@ -47,6 +47,7 @@
 // ROS
 #include <ros/ros.h>
 #include <std_msgs/String.h>
+#include <std_msgs/Empty.h>
 #include <std_msgs/Bool.h>
 #include <std_msgs/UInt16.h>
 #include <std_msgs/UInt16MultiArray.h>
@@ -102,7 +103,8 @@ private:
   std::vector<double> joint_effort_command_;
   std::vector<bool> digital_output_bit_;
   std::vector<uint16_t> digital_output_;
-  uint16_t digital_input_;
+  std::vector<bool> digital_input_bit_;
+  std::vector<uint16_t> digital_input_;
 
   // RSI
   RSIState rsi_state_;

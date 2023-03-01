@@ -51,7 +51,8 @@ KukaHardwareInterface::KukaHardwareInterface() :
     joint_position_(DEFAULT_N_DOF, 0.0), joint_velocity_(DEFAULT_N_DOF, 0.0), joint_effort_(DEFAULT_N_DOF, 0.0),
     joint_position_command_(DEFAULT_N_DOF, 0.0), joint_velocity_command_(DEFAULT_N_DOF, 0.0), joint_effort_command_(DEFAULT_N_DOF, 0.0),
     joint_names_(DEFAULT_N_DOF), rsi_initial_joint_positions_(DEFAULT_N_DOF, 0.0), rsi_joint_position_corrections_(DEFAULT_N_DOF, 0.0),
-    ipoc_(0), n_dof_(DEFAULT_N_DOF), digital_output_bit_(1, false), digital_output_(2, 0), digital_input_(0)
+    ipoc_(0), n_dof_(DEFAULT_N_DOF), digital_output_bit_(1, false), digital_output_(2, 0), digital_input_bit_(1, false),
+    digital_input_(2, 0)
 {
   in_buffer_.resize(1024);
   out_buffer_.resize(1024);
@@ -108,8 +109,22 @@ KukaHardwareInterface::KukaHardwareInterface() :
   ROS_INFO_STREAM_NAMED("hardware_interface", "Loaded kuka_rsi_hardware_interface");
 
   // Publish digital input to ROS topic for debugging
-  digital_input_pub_ = nh_.advertise<std_msgs::Bool>("DIGITAL_INPUT", 100);
-//  digital_input_pub_ = nh_.advertise<std_msgs::UInt16MultiArray>("DIGITAL_INPUT", 100);
+  if (not test_type_IN_.compare("one_bit"))
+  {
+    digital_input_pub_ = nh_.advertise<std_msgs::Bool>("DIGITAL_INPUT", 100);
+  }
+  else if (not test_type_IN_.compare("array_uint16"))
+  {
+    digital_input_pub_ = nh_.advertise<std_msgs::UInt16>("DIGITAL_INPUT", 100);
+  }
+  else if (not test_type_IN_.compare("array_uint16_2ins"))
+  {
+    digital_input_pub_ = nh_.advertise<std_msgs::UInt16MultiArray>("DIGITAL_INPUT", 100);
+  }
+  else // (not test_type_IN_.compare("none"))
+  {
+
+  }
 
 }
 
@@ -140,16 +155,35 @@ bool KukaHardwareInterface::read(const ros::Time time, const ros::Duration perio
   ipoc_ = rsi_state_.ipoc;
 
   // Read and publish the value of digital input
-  std_msgs::Bool msg;
-  msg.data = rsi_state_.digital_input_bit;
+  std_msgs::Empty msg;
+  if (not test_type_IN_.compare("one_bit"))
+  {
+    std_msgs::Bool msg;
+    msg.data = rsi_state_.digital_input_bit;
+    digital_input_bit_[0] = rsi_state_.digital_input_bit;
+    std::cout << digital_input_bit_[0] <<std::endl;
+  }
+  else if (not test_type_IN_.compare("array_uint16"))
+  {
+    std_msgs::UInt16 msg;
+    msg.data = rsi_state_.digital_input_beckhoff;
+    digital_input_[0] = rsi_state_.digital_input_beckhoff;
+    std::cout << digital_input_[0] <<std::endl;
+  }
+  else if (not test_type_IN_.compare("array_uint16_2ins"))
+  {
+//    std_msgs::UInt16MultiArray msg;
 
-//  std_msgs::UInt16MultiArray msg;
+//    digital_input_ = rsi_state_.digital_input_beckhoff;
+//    msg.data[0] = digital_input_;
 
-//  digital_input_ = rsi_state_.digital_input_beckhoff;
-//  msg.data[0] = digital_input_;
+//    digital_input_ = rsi_state_.digital_input_odot;
+//    msg.data[1] = digital_input_;
+  }
+  else // (not test_type_IN_.compare("none"))
+  {
 
-//  digital_input_ = rsi_state_.digital_input_odot;
-//  msg.data[1] = digital_input_;
+  }
 
   digital_input_pub_.publish(msg);
 
@@ -233,8 +267,6 @@ void KukaHardwareInterface::start()
   }
 
   ipoc_ = rsi_state_.ipoc;
-  digital_input_ = rsi_state_.digital_input_beckhoff;
-  digital_input_ = rsi_state_.digital_input_odot;
 
   ROS_WARN_ONCE("Sending command in start function...");
   out_buffer_ = RSICommand(rsi_joint_position_corrections_, digital_output_bit_, digital_output_, ipoc_, test_type_OUT_).xml_doc;
