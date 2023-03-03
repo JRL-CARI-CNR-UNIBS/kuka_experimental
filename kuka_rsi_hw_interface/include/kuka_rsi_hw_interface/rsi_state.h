@@ -64,7 +64,9 @@ public:
     digital_input_bit_1(false),
     digital_input_bit_2(false),
     digital_input_beckhoff(0),
-    digital_input_odot(0)
+    digital_input_odot(0),
+    digital_input_deltaStatus(0),
+    digital_input_deltaActualPos(0)
   {
     xml_doc_.resize(1024);
   }
@@ -80,11 +82,16 @@ public:
   std::vector<double> initial_cart_position;
   // IPOC
   unsigned long long ipoc;
+
   // Digital input
   bool digital_input_bit_1;
   bool digital_input_bit_2;
+
   uint16_t digital_input_beckhoff;
   uint16_t digital_input_odot;
+
+  uint16_t digital_input_deltaStatus;
+  uint32_t digital_input_deltaActualPos;
 
 };
 
@@ -97,7 +104,9 @@ RSIState::RSIState(std::string xml_doc, std::string state_type) :
   digital_input_bit_1(false),
   digital_input_bit_2(false),
   digital_input_beckhoff(0),
-  digital_input_odot(0)
+  digital_input_odot(0),
+  digital_input_deltaStatus(0),
+  digital_input_deltaActualPos(0)
 {
   ROS_WARN_ONCE("String passed to RSIState object: %s", xml_doc_.c_str());
 
@@ -201,6 +210,29 @@ RSIState::RSIState(std::string xml_doc, std::string state_type) :
     //digital_input_bit_1 = (((uint16_t) std::stoul(bool_string_2)) % 2 == 1); // check if the first bit (LSB) is 1
     std::istringstream(bool_string_2) >> digital_input_odot;
     ROS_WARN("Odot - digital input buffer: %s", bool_string_2.c_str());
+  }
+  else if (not state_type.compare("array_uint16_all_ins"))
+  {
+    TiXmlElement* digin_el;
+    digin_el = rob->FirstChildElement("Beckhoff_IN");
+    std::string bool_string_1 = digin_el->FirstChild()->Value();
+    std::istringstream(bool_string_1) >> digital_input_beckhoff;
+    ROS_WARN("Beckhoff - digital input buffer: %s", bool_string_1.c_str());
+
+    digin_el = rob->FirstChildElement("Odot_IN");
+    std::string bool_string_2 = digin_el->FirstChild()->Value();
+    std::istringstream(bool_string_2) >> digital_input_odot;
+    ROS_WARN("Odot - digital input buffer: %s", bool_string_2.c_str());
+
+    digin_el = rob->FirstChildElement("Delta_Status");
+    std::string bool_string_3 = digin_el->FirstChild()->Value();
+    std::istringstream(bool_string_3) >> digital_input_deltaStatus;
+    ROS_WARN("Delta Status - digital input buffer: %s", bool_string_3.c_str());
+
+    digin_el = rob->FirstChildElement("Delta_ActualPos");
+    std::string bool_string_4 = digin_el->FirstChild()->Value();
+    std::istringstream(bool_string_4) >> digital_input_deltaActualPos;
+    ROS_WARN("Delta Actual Pos - digital input buffer: %s", bool_string_4.c_str());
   }
   else // (not state_type.compare("none"))
   {

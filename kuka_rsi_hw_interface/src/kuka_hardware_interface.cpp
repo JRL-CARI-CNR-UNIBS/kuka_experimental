@@ -52,7 +52,7 @@ KukaHardwareInterface::KukaHardwareInterface() :
     joint_position_command_(DEFAULT_N_DOF, 0.0), joint_velocity_command_(DEFAULT_N_DOF, 0.0), joint_effort_command_(DEFAULT_N_DOF, 0.0),
     joint_names_(DEFAULT_N_DOF), rsi_initial_joint_positions_(DEFAULT_N_DOF, 0.0), rsi_joint_position_corrections_(DEFAULT_N_DOF, 0.0),
     ipoc_(0), n_dof_(DEFAULT_N_DOF), digital_output_bit_(1, false), digital_output_(2, 0), digital_input_bit_(2, false),
-    digital_input_(2, 1)
+    digital_input_(3, 0), digital_input_deltaActualPos(0)
 {
   in_buffer_.resize(1024);
   out_buffer_.resize(1024);
@@ -119,7 +119,7 @@ KukaHardwareInterface::KukaHardwareInterface() :
   }
   else if (not test_type_IN_.compare("array_uint16_2ins"))
   {
-    digital_input_pub_ = nh_.advertise<std_msgs::UInt16MultiArray>("DIGITAL_INPUT", 100);
+    digital_input_pub_ = nh_.advertise<kuka_rsi_hw_interface::uint16_t_array>("DIGITAL_INPUT", 100);
   }
   else // (not test_type_IN_.compare("none"))
   {
@@ -179,16 +179,39 @@ bool KukaHardwareInterface::read(const ros::Time time, const ros::Duration perio
       digital_input_[1] = rsi_state_.digital_input_odot;
       std::cout << "Odot: " << digital_input_[1] << std::endl;
 
-    std_msgs::UInt16 msg[2];
-    msg[0].data = digital_input_[0];
-    msg[1].data = digital_input_[1];
+    ROS_WARN("1");
+    kuka_rsi_hw_interface::uint16_t_array msg;
+    ROS_WARN("2");
+    msg.in.clear();
+    msg.in.push_back(digital_input_[0]);
+    ROS_WARN("3");
+    msg.in.push_back(digital_input_[1]);
+    ROS_WARN("4");
+  }
+  else if (not test_type_IN_.compare("array_uint16_2ins"))
+  {
+    digital_input_[0] = rsi_state_.digital_input_beckhoff;
+    std::cout << "Beckhoff: " << digital_input_[0] << std::endl;
+    digital_input_[1] = rsi_state_.digital_input_odot;
+    std::cout << "Odot: " << digital_input_[1] << std::endl;
+    digital_input_deltaActualPos = rsi_state_.digital_input_deltaActualPos;
+    std::cout << "Odot: " << digital_input_deltaActualPos << std::endl;
+
+//    ROS_WARN("1");
+//    kuka_rsi_hw_interface::uint16_t_array msg;
+//    ROS_WARN("2");
+//    msg.in.clear();
+//    msg.in.push_back(digital_input_[0]);
+//    ROS_WARN("3");
+//    msg.in.push_back(digital_input_[1]);
+//    ROS_WARN("4");
   }
   else // (not test_type_IN_.compare("none"))
   {
 
   }
 
-  digital_input_pub_.publish(msg);
+  // digital_input_pub_.publish(msg);
 
   return true;
 }

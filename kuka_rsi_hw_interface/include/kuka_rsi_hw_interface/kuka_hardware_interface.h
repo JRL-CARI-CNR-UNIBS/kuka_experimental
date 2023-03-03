@@ -50,7 +50,6 @@
 #include <std_msgs/Empty.h>
 #include <std_msgs/Bool.h>
 #include <std_msgs/UInt16.h>
-#include <std_msgs/UInt16MultiArray.h>
 
 
 // ros_control
@@ -74,6 +73,9 @@
 #include <kuka_rsi_hw_interface/write_output_bool.h>
 #include <kuka_rsi_hw_interface/write_output_bool_array.h>
 #include <kuka_rsi_hw_interface/write_output_bool_array_2outs.h>
+
+//MSG
+#include <kuka_rsi_hw_interface/uint16_t_array.h>
 
 
 namespace kuka_rsi_hw_interface
@@ -105,6 +107,7 @@ private:
   std::vector<uint16_t> digital_output_;
   std::vector<bool> digital_input_bit_;
   std::vector<uint16_t> digital_input_;
+  uint32_t digital_input_deltaActualPos;
 
   // RSI
   RSIState rsi_state_;

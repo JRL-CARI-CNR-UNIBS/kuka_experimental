@@ -25,6 +25,11 @@ add_service_files(
   write_output_bool_array_2outs.srv
 )
 
+add_message_files(
+  FILES
+  uint16_t_array.msg
+)
+
 generate_messages(
   DEPENDENCIES
   std_msgs
