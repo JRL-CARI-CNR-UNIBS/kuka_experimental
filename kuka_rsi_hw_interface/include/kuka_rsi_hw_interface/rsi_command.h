@@ -52,7 +52,7 @@ class RSICommand
 {
 public:
   RSICommand();
-  RSICommand(std::vector<double> position_corrections, std::vector<bool> digital_output_bit, std::vector<uint16_t> digital_output, unsigned long long ipoc, std::string command_type);
+  RSICommand(std::vector<double> position_corrections, std::vector<bool> digital_output_bit, std::vector<uint16_t> digital_output, uint32_t deltaTargetPos_PUU, unsigned long long ipoc, std::string command_type);
   std::string xml_doc;
 };
 
@@ -61,7 +61,7 @@ RSICommand::RSICommand()
   // Intentionally empty
 }
 
-RSICommand::RSICommand(std::vector<double> joint_position_correction, std::vector<bool> digital_output_bit, std::vector<uint16_t> digital_output, unsigned long long ipoc, std::string command_type)
+RSICommand::RSICommand(std::vector<double> joint_position_correction, std::vector<bool> digital_output_bit, std::vector<uint16_t> digital_output, uint32_t deltaTargetPos_PUU, unsigned long long ipoc, std::string command_type)
 {
   TiXmlDocument doc;
   TiXmlElement* root = new TiXmlElement("Sen");
@@ -116,6 +116,33 @@ RSICommand::RSICommand(std::vector<double> joint_position_correction, std::vecto
 
 //    out->SetAttribute("Out", std::to_string(digital_output[1]));
     root->LinkEndChild(out_odot);
+  }
+  else if (not command_type.compare("array_uint16_all_outs"))
+  {
+    TiXmlElement* out_beckhoff = new TiXmlElement("Beckhoff_OUT");
+    out_beckhoff->LinkEndChild(new TiXmlText(std::to_string(digital_output[0])));
+
+//    out->SetAttribute("Out", std::to_string(digital_output[0]));
+    root->LinkEndChild(out_beckhoff);
+
+    TiXmlElement* out_odot = new TiXmlElement("Odot_OUT");
+    out_odot->LinkEndChild(new TiXmlText(std::to_string(digital_output[1])));
+
+//    out->SetAttribute("Out", std::to_string(digital_output[1]));
+    root->LinkEndChild(out_odot);
+
+    TiXmlElement* delta_control = new TiXmlElement("Delta_Control");
+    delta_control->LinkEndChild(new TiXmlText(std::to_string(digital_output[2])));
+
+//    out->SetAttribute("Out", std::to_string(digital_output[2]));
+    root->LinkEndChild(delta_control);
+
+    TiXmlElement* delta_TargetPos = new TiXmlElement("Delta_TargetPos");
+    delta_TargetPos->LinkEndChild(new TiXmlText(std::to_string(deltaTargetPos_PUU)));
+
+//    out->SetAttribute("Out", std::to_string(deltaTargetPos_PUU));
+    root->LinkEndChild(delta_TargetPos);
+
   }
   else // (not command_type.compare("none"))
   {

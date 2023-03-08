@@ -23,6 +23,7 @@ add_service_files(
   write_output_bool.srv
   write_output_bool_array.srv
   write_output_bool_array_2outs.srv
+  write_output_bool_array_all_outs.srv
 )
 
 add_message_files(

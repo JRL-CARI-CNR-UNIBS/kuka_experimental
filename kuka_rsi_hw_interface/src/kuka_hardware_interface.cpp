@@ -58,8 +58,8 @@ KukaHardwareInterface::KukaHardwareInterface() :
     joint_position_(DEFAULT_N_DOF, 0.0), joint_velocity_(DEFAULT_N_DOF, 0.0), joint_effort_(DEFAULT_N_DOF, 0.0),
     joint_position_command_(DEFAULT_N_DOF, 0.0), joint_velocity_command_(DEFAULT_N_DOF, 0.0), joint_effort_command_(DEFAULT_N_DOF, 0.0),
     joint_names_(DEFAULT_N_DOF), rsi_initial_joint_positions_(DEFAULT_N_DOF, 0.0), rsi_joint_position_corrections_(DEFAULT_N_DOF, 0.0),
-    ipoc_(0), n_dof_(DEFAULT_N_DOF), digital_output_bit_(1, false), digital_output_(2, 0), digital_input_bit_(2, false),
-    digital_input_(3, 0), deltaActualPos_PUU_(0), deltaActualPos_mm_(0.0)
+    ipoc_(0), n_dof_(DEFAULT_N_DOF), digital_output_bit_(1, false), digital_output_(3, 0), digital_input_bit_(2, false),
+    digital_input_(3, 0), deltaTargetPos_PUU_(0), deltaTargetPos_mm_(0.0), deltaActualPos_PUU_(0), deltaActualPos_mm_(0.0)
 {
   in_buffer_.resize(1024);
   out_buffer_.resize(1024);
@@ -256,7 +256,7 @@ bool KukaHardwareInterface::write(const ros::Time time, const ros::Duration peri
     rsi_joint_position_corrections_[i] = (RAD2DEG * joint_position_command_[i]) - rsi_initial_joint_positions_[i];
   }
 
-  out_buffer_ = RSICommand(rsi_joint_position_corrections_, digital_output_bit_, digital_output_, ipoc_, test_type_OUT_).xml_doc;
+  out_buffer_ = RSICommand(rsi_joint_position_corrections_, digital_output_bit_, digital_output_, deltaTargetPos_PUU_, ipoc_, test_type_OUT_).xml_doc;
   server_->send(out_buffer_);
 
 //  ROS_WARN_ONCE("Out buffer = %s",out_buffer_.c_str());
@@ -294,6 +294,19 @@ bool KukaHardwareInterface::write_digital_output_array_2outs(kuka_rsi_hw_interfa
   return true;
 }
 
+
+bool KukaHardwareInterface::write_digital_output_array_all_outs(kuka_rsi_hw_interface::write_output_bool_array_all_outs::Request &req, kuka_rsi_hw_interface::write_output_bool_array_all_outs::Response &res)
+{
+  digital_output_[0] = req.out1;
+  digital_output_[1] = req.out2;
+  digital_output_[2] = req.out3;
+  deltaTargetPos_mm_ = req.out4;
+  deltaTargetPos_PUU_ = 1.0 / const_PUU2mm_ * deltaTargetPos_mm_;
+  std::cout << "Command sent: " << out_buffer_.c_str() << std::endl;
+  return true;
+}
+
+
 void KukaHardwareInterface::start()
 {
   // Wait for connection from robot
@@ -326,7 +339,7 @@ void KukaHardwareInterface::start()
   ipoc_ = rsi_state_.ipoc;
 
   ROS_WARN_ONCE("Sending command in start function...");
-  out_buffer_ = RSICommand(rsi_joint_position_corrections_, digital_output_bit_, digital_output_, ipoc_, test_type_OUT_).xml_doc;
+  out_buffer_ = RSICommand(rsi_joint_position_corrections_, digital_output_bit_, digital_output_, deltaTargetPos_PUU_, ipoc_, test_type_OUT_).xml_doc;
   ROS_WARN_ONCE("Command sent in start function.");
 
   server_->send(out_buffer_);

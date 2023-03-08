@@ -74,6 +74,7 @@
 #include <kuka_rsi_hw_interface/write_output_bool.h>
 #include <kuka_rsi_hw_interface/write_output_bool_array.h>
 #include <kuka_rsi_hw_interface/write_output_bool_array_2outs.h>
+#include <kuka_rsi_hw_interface/write_output_bool_array_all_outs.h>
 
 //MSG
 #include <kuka_rsi_hw_interface/uint16_t_array.h>
@@ -110,6 +111,8 @@ private:
   std::vector<uint16_t> digital_output_;
   std::vector<bool> digital_input_bit_;
   std::vector<uint16_t> digital_input_;
+  uint32_t deltaTargetPos_PUU_;
+  double deltaTargetPos_mm_;
   uint32_t deltaActualPos_PUU_;
   double deltaActualPos_mm_;
 
@@ -160,6 +163,7 @@ public:
   bool write_digital_output(kuka_rsi_hw_interface::write_output_bool::Request &req, kuka_rsi_hw_interface::write_output_bool::Response &res);
   bool write_digital_output_array(kuka_rsi_hw_interface::write_output_bool_array::Request &req, kuka_rsi_hw_interface::write_output_bool_array::Response &res);
   bool write_digital_output_array_2outs(kuka_rsi_hw_interface::write_output_bool_array_2outs::Request &req, kuka_rsi_hw_interface::write_output_bool_array_2outs::Response &res);
+  bool write_digital_output_array_all_outs(kuka_rsi_hw_interface::write_output_bool_array_all_outs::Request &req, kuka_rsi_hw_interface::write_output_bool_array_all_outs::Response &res);
 
 };
 
