@@ -71,7 +71,7 @@ public:
     xml_doc_.resize(1024);
   }
 
-  RSIState(std::string xml_doc, std::string state_type,  std::map<std::string, double> delta_params);
+  RSIState(std::string xml_doc, std::string state_type,  std::map<std::string, double> servo_params);
   // AIPOS
   std::vector<double> positions;
   // ASPos
@@ -95,7 +95,7 @@ public:
 
 };
 
-RSIState::RSIState(std::string xml_doc, std::string state_type,  std::map<std::string, double> delta_params) :
+RSIState::RSIState(std::string xml_doc, std::string state_type,  std::map<std::string, double> servo_params) :
   xml_doc_(xml_doc),
   positions(DEFAULT_N_DOF, 0.0),
   initial_positions(DEFAULT_N_DOF, 0.0),

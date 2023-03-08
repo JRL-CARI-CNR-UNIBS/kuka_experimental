@@ -96,7 +96,8 @@ private:
   int n_dof_;
   std::string test_type_IN_;
   std::string test_type_OUT_;
-  std::map<std::string, double> delta_params_;
+  std::vector<std::string> servo_param_names_;
+  std::map<std::string, double> servo_params_;
 
   std::vector<std::string> joint_names_;
   std::vector<double> joint_position_;
@@ -109,7 +110,11 @@ private:
   std::vector<uint16_t> digital_output_;
   std::vector<bool> digital_input_bit_;
   std::vector<uint16_t> digital_input_;
-  uint32_t digital_input_deltaActualPos;
+  uint32_t deltaActualPos_PUU_;
+  double deltaActualPos_mm_;
+
+  // Conversion factor [PUU -> mm]
+  double const_PUU2mm_;
 
   // RSI
   RSIState rsi_state_;

@@ -40,7 +40,13 @@
 #include <kuka_rsi_hw_interface/kuka_hardware_interface.h>
 
 #include <stdexcept>
-#include <XmlRpc.h>
+
+#define _USE_MATH_DEFINES
+#include <cmath>
+
+//#ifndef M_PI
+//#define M_PI (3.14159265358979323846)
+//#endif
 
 #define DEFAULT_N_DOF 6
 #define N_DIGOUT 16
@@ -53,7 +59,7 @@ KukaHardwareInterface::KukaHardwareInterface() :
     joint_position_command_(DEFAULT_N_DOF, 0.0), joint_velocity_command_(DEFAULT_N_DOF, 0.0), joint_effort_command_(DEFAULT_N_DOF, 0.0),
     joint_names_(DEFAULT_N_DOF), rsi_initial_joint_positions_(DEFAULT_N_DOF, 0.0), rsi_joint_position_corrections_(DEFAULT_N_DOF, 0.0),
     ipoc_(0), n_dof_(DEFAULT_N_DOF), digital_output_bit_(1, false), digital_output_(2, 0), digital_input_bit_(2, false),
-    digital_input_(3, 0), digital_input_deltaActualPos(0)
+    digital_input_(3, 0), deltaActualPos_PUU_(0), deltaActualPos_mm_(0.0)
 {
   in_buffer_.resize(1024);
   out_buffer_.resize(1024);
@@ -62,6 +68,15 @@ KukaHardwareInterface::KukaHardwareInterface() :
 
   // Read params from parameter server (yaml file)
   read_params();
+
+  // Compute electronic and mechanical gear ratio
+  double tau_pinionrack = M_PI * servo_params_.at("pinion_diameter");
+  double tau_mechanical = tau_pinionrack * 1.0 / servo_params_.at("tau_gearbox");
+  double electronic_resolution = servo_params_.at("encoder_pulse_number") * servo_params_.at("encoder_resolution_multiplier");
+  double electronic_gear_ratio = servo_params_.at("electronic_gear_ratio_feed_constant") / servo_params_.at("electronic_gear_ratio_numerator");
+  double n_PUU_per_rev = electronic_resolution * electronic_gear_ratio;
+
+  const_PUU2mm_ = tau_mechanical * 1.0 / n_PUU_per_rev;
 
   //Create ros_control interface std::string command_type
   for (std::size_t i = 0; i < n_dof_; ++i)
@@ -111,69 +126,53 @@ KukaHardwareInterface::~KukaHardwareInterface()
 bool KukaHardwareInterface::read_params()
 {
   // Read params of the DELTA Servo Drive
-  XmlRpc::XmlRpcValue delta_data;
+  servo_param_names_ = {"tau_gearbox","pinion_diameter","encoder_pulse_number","encoder_resolution_multiplier",
+                        "max_motor_speed","electronic_gear_ratio_feed_constant","electronic_gear_ratio_numerator"};
 
-  if (!nh_.getParam("delta", delta_data))
+  double value(0);
+  std::string current_param;
+  for (int i = 0; i < servo_param_names_.size(); ++i)
   {
-    ROS_ERROR("Cannot find required parameter 'delta' "
-              "on the parameter server.");
-    throw std::runtime_error("Cannot find required parameter "
-                             "'delta' on the parameter server.");
+    current_param = servo_param_names_[i];
+
+    if (!nh_.getParam("delta/" + current_param, value))
+    {
+      ROS_ERROR_STREAM("Cannot find required parameter '" << current_param << "' "
+                       "on the parameter server.");
+    }
+    servo_params_.insert({current_param, value});
+
+    ROS_INFO_STREAM_NAMED("kuka_hardware_interface", "Servo - " << current_param << ": " << value);
   }
 
-  if (delta_data.getType() != XmlRpc::XmlRpcValue::TypeArray)
-  {
-    ROS_ERROR("The param is not a list.");
-    return false;
-  }
-
-  for (int i = 0; i < delta_data.size(); i++)
-  {
-    XmlRpc::XmlRpcValue delta_data_Object = delta_data[i];
-    std::cout << delta_data_Object.toXml() << std::endl;
-
-    std::string delta_data_str = delta_data_Object.toXml();
-
-    TiXmlDocument bufferdoc;
-    bufferdoc.Parse(delta_data_str.c_str());
-
-    TiXmlElement* element = bufferdoc.FirstChildElement("value")->FirstChildElement("struct")->FirstChildElement("member");
-    TiXmlElement* name = element->FirstChildElement("name");
-    std::string name_str = name->FirstChild()->Value();
-    TiXmlElement* value = element->FirstChildElement("value")->FirstChildElement();
-    std::string value_str = value->FirstChild()->Value();
-
-    ROS_INFO_STREAM_NAMED("kuka_hardware_interface", name_str << ": " << value_str);
-
-    delta_params_.insert({name_str, std::stod(value_str)});
-  }
-
+  // Read robot joint names
   if (!nh_.getParam("controller_joint_names", joint_names_))
   {
     ROS_ERROR("Cannot find required parameter 'controller_joint_names' "
               "on the parameter server.");
-    throw std::runtime_error("Cannot find required parameter "
-                             "'controller_joint_names' on the parameter server.");
   }
 
-  nh_.param("rsi/n_dof", n_dof_, DEFAULT_N_DOF);
+  // Read robot number of DoF
+  if (!nh_.getParam("rsi/n_dof", n_dof_))
+  {
+    ROS_ERROR("Cannot find required parameter 'n_dof' "
+              "on the parameter server.");
+  }
   ROS_INFO_STREAM_NAMED("kuka_hardware_interface", "DOF: " << n_dof_);
 
+  // Read test type (inputs)
   if (!nh_.getParam("rsi/test_type_IN", test_type_IN_))
   {
     ROS_ERROR("Cannot find required parameter 'rsi/test_type_IN' "
               "on the parameter server.");
-    throw std::runtime_error("Cannot find required parameter "
-                             "'rsi/test_type_IN' on the parameter server.");
   }
   ROS_INFO_STREAM_NAMED("kuka_hardware_interface", "Test type IN: " << test_type_IN_);
 
+  // Read test type (outputs)
   if (!nh_.getParam("rsi/test_type_OUT", test_type_OUT_))
   {
     ROS_ERROR("Cannot find required parameter 'rsi/test_type_OUT' "
               "on the parameter server.");
-    throw std::runtime_error("Cannot find required parameter "
-                             "'rsi/test_type_OUT' on the parameter server.");
   }
   ROS_INFO_STREAM_NAMED("kuka_hardware_interface", "Test type OUT: " << test_type_OUT_);
 
@@ -194,7 +193,7 @@ bool KukaHardwareInterface::read(const ros::Time time, const ros::Duration perio
   }
 //ROS_WARN("here2");
 
-  rsi_state_ = RSIState(in_buffer_, test_type_IN_, delta_params_);
+  rsi_state_ = RSIState(in_buffer_, test_type_IN_, servo_params_);
   for (std::size_t i = 0; i < n_dof_; ++i)
   {
     joint_position_[i] = DEG2RAD * rsi_state_.positions[i];
@@ -225,33 +224,18 @@ bool KukaHardwareInterface::read(const ros::Time time, const ros::Duration perio
     std::cout << "Beckhoff: " << digital_input_[0] << std::endl;
     digital_input_[1] = rsi_state_.digital_input_odot;
     std::cout << "Odot: " << digital_input_[1] << std::endl;
-
-    ROS_WARN("1");
-    kuka_rsi_hw_interface::uint16_t_array msg;
-    ROS_WARN("2");
-    msg.in.clear();
-    msg.in.push_back(digital_input_[0]);
-    ROS_WARN("3");
-    msg.in.push_back(digital_input_[1]);
-    ROS_WARN("4");
   }
-  else if (not test_type_IN_.compare("array_uint16_2ins"))
+  else if (not test_type_IN_.compare("array_uint16_all_ins"))
   {
     digital_input_[0] = rsi_state_.digital_input_beckhoff;
     std::cout << "Beckhoff: " << digital_input_[0] << std::endl;
+
     digital_input_[1] = rsi_state_.digital_input_odot;
     std::cout << "Odot: " << digital_input_[1] << std::endl;
-    digital_input_deltaActualPos = rsi_state_.digital_input_deltaActualPos;
-    std::cout << "Odot: " << digital_input_deltaActualPos << std::endl;
 
-//    ROS_WARN("1");
-//    kuka_rsi_hw_interface::uint16_t_array msg;
-//    ROS_WARN("2");
-//    msg.in.clear();
-//    msg.in.push_back(digital_input_[0]);
-//    ROS_WARN("3");
-//    msg.in.push_back(digital_input_[1]);
-//    ROS_WARN("4");
+    deltaActualPos_PUU_ = rsi_state_.digital_input_deltaActualPos;
+    deltaActualPos_mm_ = const_PUU2mm_ * deltaActualPos_PUU_;
+    std::cout << "Delta Actual Pos: " << deltaActualPos_PUU_ << " [PUU] | " << deltaActualPos_mm_ << " [mm]" << std::endl;
   }
   else // (not test_type_IN_.compare("none"))
   {
@@ -329,7 +313,7 @@ void KukaHardwareInterface::start()
   ROS_WARN_STREAM("State buffer: " << in_buffer_);
 
   ROS_WARN_ONCE("Reading state in start function...");
-  rsi_state_ = RSIState(in_buffer_, test_type_IN_, delta_params_);
+  rsi_state_ = RSIState(in_buffer_, test_type_IN_, servo_params_);
   ROS_WARN_ONCE("State read in start function.");
 
   for (std::size_t i = 0; i < n_dof_; ++i)
