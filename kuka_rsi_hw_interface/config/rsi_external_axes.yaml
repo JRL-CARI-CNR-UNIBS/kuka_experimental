@@ -1,5 +1,13 @@
 rsi:
   n_dof: 6
-  test_type_IN_: "array_uint16_all_ins"
-  test_type_OUT_: "array_uint16_2outs"
+  test_type_IN: "array_uint16_all_ins"
+  test_type_OUT: "array_uint16_2outs"
     
+delta:
+  - tau_gearbox: 6.0 # (motor velocity / load velocity)
+  - tau_pinionrack: 50.93 # mm/rev (rack linear velocity / pinion velocity)
+  - encoder_pulse_number: 2500.0 # pulse/rev (parameter P1-46 in ASDA software)
+  - encoder_resolution_multiplier: 4.0
+  - max_motor_speed: 3000.0 # RPM (rated, parameter P1-55 in ASDA software)
+  - electronic_gear_ratio_feed_constant: 10.0 # (parameter P1-45 in ASDA software)
+  - electronic_gear_ratio_numerator: 128.0 # (parameter P1-44 in ASDA software)

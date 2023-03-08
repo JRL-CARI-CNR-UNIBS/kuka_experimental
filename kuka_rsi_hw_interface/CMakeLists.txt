@@ -47,16 +47,22 @@ catkin_package(
     TinyXML
 )
 
-
+set(INCLUDE_DIR include/kuka_rsi_hw_interface)
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
   ${Boost_INCLUDE_DIRS}
   ${TinyXML_INCLUDE_DIRS}
+  ${INCLUDE_DIR}
+
 )
 
 add_library(kuka_hardware_interface
   src/kuka_hardware_interface.cpp
+  ${INCLUDE_DIR}/kuka_hardware_interface.h
+  ${INCLUDE_DIR}/rsi_command.h
+  ${INCLUDE_DIR}/rsi_state.h
+  ${INCLUDE_DIR}/udp_server.h
 )
 
 target_link_libraries(kuka_hardware_interface

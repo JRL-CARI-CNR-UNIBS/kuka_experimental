@@ -42,7 +42,7 @@
 #include <string>
 #include <tinyxml.h>
 #include <vector>
-#include <bitset>
+#include <map>
 
 #define DEFAULT_N_DOF 6
 
@@ -71,7 +71,7 @@ public:
     xml_doc_.resize(1024);
   }
 
-  RSIState(std::string xml_doc, std::string state_type);
+  RSIState(std::string xml_doc, std::string state_type,  std::map<std::string, double> delta_params);
   // AIPOS
   std::vector<double> positions;
   // ASPos
@@ -95,7 +95,7 @@ public:
 
 };
 
-RSIState::RSIState(std::string xml_doc, std::string state_type) :
+RSIState::RSIState(std::string xml_doc, std::string state_type,  std::map<std::string, double> delta_params) :
   xml_doc_(xml_doc),
   positions(DEFAULT_N_DOF, 0.0),
   initial_positions(DEFAULT_N_DOF, 0.0),
@@ -217,7 +217,7 @@ RSIState::RSIState(std::string xml_doc, std::string state_type) :
     digin_el = rob->FirstChildElement("Beckhoff_IN");
     std::string bool_string_1 = digin_el->FirstChild()->Value();
     std::istringstream(bool_string_1) >> digital_input_beckhoff;
-    ROS_WARN("Beckhoff - digital input buffer: %s", bool_string_1.c_str());
+    ROS_WARN("Beckhoff IN - digital input buffer: %s", bool_string_1.c_str());
 
     digin_el = rob->FirstChildElement("Odot_IN");
     std::string bool_string_2 = digin_el->FirstChild()->Value();

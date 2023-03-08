@@ -43,6 +43,7 @@
 // STL
 #include <vector>
 #include <string>
+#include <map>
 
 // ROS
 #include <ros/ros.h>
@@ -95,6 +96,7 @@ private:
   int n_dof_;
   std::string test_type_IN_;
   std::string test_type_OUT_;
+  std::map<std::string, double> delta_params_;
 
   std::vector<std::string> joint_names_;
   std::vector<double> joint_position_;
@@ -146,6 +148,7 @@ public:
 
   void start();
   void configure();
+  bool read_params();
   bool read(const ros::Time time, const ros::Duration period);
   bool write(const ros::Time time, const ros::Duration period);
 

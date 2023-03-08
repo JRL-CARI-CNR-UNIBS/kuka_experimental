@@ -40,6 +40,7 @@
 #include <kuka_rsi_hw_interface/kuka_hardware_interface.h>
 
 #include <stdexcept>
+#include <XmlRpc.h>
 
 #define DEFAULT_N_DOF 6
 #define N_DIGOUT 16
@@ -59,36 +60,10 @@ KukaHardwareInterface::KukaHardwareInterface() :
   remote_host_.resize(1024);
   remote_port_.resize(1024);
 
-  nh_.param("rsi/n_dof", n_dof_, DEFAULT_N_DOF);
-  ROS_INFO_STREAM_NAMED("kuka_hardware_interface", "DOF: " << n_dof_);
+  // Read params from parameter server (yaml file)
+  read_params();
 
-  if (!nh_.getParam("rsi/test_type_IN_", test_type_IN_))
-  {
-    ROS_ERROR("Cannot find required parameter 'rsi/test_type_IN_' "
-      "on the parameter server.");
-    throw std::runtime_error("Cannot find required parameter "
-      "'rsi/test_type_IN_' on the parameter server.");
-  }
-  if (!nh_.getParam("rsi/test_type_OUT_", test_type_OUT_))
-  {
-    ROS_ERROR("Cannot find required parameter 'rsi/test_type_OUT_' "
-      "on the parameter server.");
-    throw std::runtime_error("Cannot find required parameter "
-      "'rsi/test_type_OUT_' on the parameter server.");
-  }
-
-  ROS_INFO_STREAM_NAMED("kuka_hardware_interface", "Test type IN: " << test_type_IN_);
-  ROS_INFO_STREAM_NAMED("kuka_hardware_interface", "Test type OUT: " << test_type_OUT_);
-
-  if (!nh_.getParam("controller_joint_names", joint_names_))
-  {
-    ROS_ERROR("Cannot find required parameter 'controller_joint_names' "
-      "on the parameter server.");
-    throw std::runtime_error("Cannot find required parameter "
-      "'controller_joint_names' on the parameter server.");
-  }
-
-  //Create ros_control interfacesstd::string command_type
+  //Create ros_control interface std::string command_type
   for (std::size_t i = 0; i < n_dof_; ++i)
   {
     // Create joint state interface for all joints
@@ -133,6 +108,78 @@ KukaHardwareInterface::~KukaHardwareInterface()
 
 }
 
+bool KukaHardwareInterface::read_params()
+{
+  // Read params of the DELTA Servo Drive
+  XmlRpc::XmlRpcValue delta_data;
+
+  if (!nh_.getParam("delta", delta_data))
+  {
+    ROS_ERROR("Cannot find required parameter 'delta' "
+              "on the parameter server.");
+    throw std::runtime_error("Cannot find required parameter "
+                             "'delta' on the parameter server.");
+  }
+
+  if (delta_data.getType() != XmlRpc::XmlRpcValue::TypeArray)
+  {
+    ROS_ERROR("The param is not a list.");
+    return false;
+  }
+
+  for (int i = 0; i < delta_data.size(); i++)
+  {
+    XmlRpc::XmlRpcValue delta_data_Object = delta_data[i];
+    std::cout << delta_data_Object.toXml() << std::endl;
+
+    std::string delta_data_str = delta_data_Object.toXml();
+
+    TiXmlDocument bufferdoc;
+    bufferdoc.Parse(delta_data_str.c_str());
+
+    TiXmlElement* element = bufferdoc.FirstChildElement("value")->FirstChildElement("struct")->FirstChildElement("member");
+    TiXmlElement* name = element->FirstChildElement("name");
+    std::string name_str = name->FirstChild()->Value();
+    TiXmlElement* value = element->FirstChildElement("value")->FirstChildElement();
+    std::string value_str = value->FirstChild()->Value();
+
+    ROS_INFO_STREAM_NAMED("kuka_hardware_interface", name_str << ": " << value_str);
+
+    delta_params_.insert({name_str, std::stod(value_str)});
+  }
+
+  if (!nh_.getParam("controller_joint_names", joint_names_))
+  {
+    ROS_ERROR("Cannot find required parameter 'controller_joint_names' "
+              "on the parameter server.");
+    throw std::runtime_error("Cannot find required parameter "
+                             "'controller_joint_names' on the parameter server.");
+  }
+
+  nh_.param("rsi/n_dof", n_dof_, DEFAULT_N_DOF);
+  ROS_INFO_STREAM_NAMED("kuka_hardware_interface", "DOF: " << n_dof_);
+
+  if (!nh_.getParam("rsi/test_type_IN", test_type_IN_))
+  {
+    ROS_ERROR("Cannot find required parameter 'rsi/test_type_IN' "
+              "on the parameter server.");
+    throw std::runtime_error("Cannot find required parameter "
+                             "'rsi/test_type_IN' on the parameter server.");
+  }
+  ROS_INFO_STREAM_NAMED("kuka_hardware_interface", "Test type IN: " << test_type_IN_);
+
+  if (!nh_.getParam("rsi/test_type_OUT", test_type_OUT_))
+  {
+    ROS_ERROR("Cannot find required parameter 'rsi/test_type_OUT' "
+              "on the parameter server.");
+    throw std::runtime_error("Cannot find required parameter "
+                             "'rsi/test_type_OUT' on the parameter server.");
+  }
+  ROS_INFO_STREAM_NAMED("kuka_hardware_interface", "Test type OUT: " << test_type_OUT_);
+
+  return true;
+}
+
 bool KukaHardwareInterface::read(const ros::Time time, const ros::Duration period)
 {
   in_buffer_.resize(1024);
@@ -147,7 +194,7 @@ bool KukaHardwareInterface::read(const ros::Time time, const ros::Duration perio
   }
 //ROS_WARN("here2");
 
-  rsi_state_ = RSIState(in_buffer_, test_type_IN_);
+  rsi_state_ = RSIState(in_buffer_, test_type_IN_, delta_params_);
   for (std::size_t i = 0; i < n_dof_; ++i)
   {
     joint_position_[i] = DEG2RAD * rsi_state_.positions[i];
@@ -174,10 +221,10 @@ bool KukaHardwareInterface::read(const ros::Time time, const ros::Duration perio
   }
   else if (not test_type_IN_.compare("array_uint16_2ins"))
   {
-      digital_input_[0] = rsi_state_.digital_input_beckhoff;
-      std::cout << "Beckhoff: " << digital_input_[0] << std::endl;
-      digital_input_[1] = rsi_state_.digital_input_odot;
-      std::cout << "Odot: " << digital_input_[1] << std::endl;
+    digital_input_[0] = rsi_state_.digital_input_beckhoff;
+    std::cout << "Beckhoff: " << digital_input_[0] << std::endl;
+    digital_input_[1] = rsi_state_.digital_input_odot;
+    std::cout << "Odot: " << digital_input_[1] << std::endl;
 
     ROS_WARN("1");
     kuka_rsi_hw_interface::uint16_t_array msg;
@@ -282,7 +329,7 @@ void KukaHardwareInterface::start()
   ROS_WARN_STREAM("State buffer: " << in_buffer_);
 
   ROS_WARN_ONCE("Reading state in start function...");
-  rsi_state_ = RSIState(in_buffer_, test_type_IN_);
+  rsi_state_ = RSIState(in_buffer_, test_type_IN_, delta_params_);
   ROS_WARN_ONCE("State read in start function.");
 
   for (std::size_t i = 0; i < n_dof_; ++i)
