@@ -91,7 +91,7 @@ public:
   uint16_t digital_input_odot;
 
   uint16_t digital_input_deltaStatus;
-  uint32_t digital_input_deltaActualPos;
+  int32_t digital_input_deltaActualPos;
 
 };
 
@@ -217,22 +217,22 @@ RSIState::RSIState(std::string xml_doc, std::string state_type,  std::map<std::s
     digin_el = rob->FirstChildElement("Beckhoff_IN");
     std::string bool_string_1 = digin_el->FirstChild()->Value();
     std::istringstream(bool_string_1) >> digital_input_beckhoff;
-    ROS_WARN("Beckhoff IN - digital input buffer: %s", bool_string_1.c_str());
+//    ROS_WARN("Beckhoff IN - digital input buffer: %s", bool_string_1.c_str());
 
     digin_el = rob->FirstChildElement("Odot_IN");
     std::string bool_string_2 = digin_el->FirstChild()->Value();
     std::istringstream(bool_string_2) >> digital_input_odot;
-    ROS_WARN("Odot - digital input buffer: %s", bool_string_2.c_str());
+//    ROS_WARN("Odot - digital input buffer: %s", bool_string_2.c_str());
 
     digin_el = rob->FirstChildElement("Delta_Status");
     std::string bool_string_3 = digin_el->FirstChild()->Value();
     std::istringstream(bool_string_3) >> digital_input_deltaStatus;
-    ROS_WARN("Delta Status - digital input buffer: %s", bool_string_3.c_str());
+//    ROS_WARN("Delta Status - digital input buffer: %s", bool_string_3.c_str());
 
     digin_el = rob->FirstChildElement("Delta_ActualPos");
     std::string bool_string_4 = digin_el->FirstChild()->Value();
     std::istringstream(bool_string_4) >> digital_input_deltaActualPos;
-    ROS_WARN("Delta Actual Pos - digital input buffer: %s", bool_string_4.c_str());
+//    ROS_WARN("Delta Actual Pos - digital input buffer: %s", bool_string_4.c_str());
   }
   else // (not state_type.compare("none"))
   {

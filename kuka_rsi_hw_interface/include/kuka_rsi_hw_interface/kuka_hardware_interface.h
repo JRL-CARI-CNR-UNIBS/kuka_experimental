@@ -44,6 +44,7 @@
 #include <vector>
 #include <string>
 #include <map>
+#include <bitset>
 
 // ROS
 #include <ros/ros.h>
@@ -78,6 +79,7 @@
 
 //MSG
 #include <kuka_rsi_hw_interface/uint16_t_array.h>
+#include <kuka_rsi_hw_interface/input_data.h>
 
 
 namespace kuka_rsi_hw_interface
@@ -111,9 +113,9 @@ private:
   std::vector<uint16_t> digital_output_;
   std::vector<bool> digital_input_bit_;
   std::vector<uint16_t> digital_input_;
-  uint32_t deltaTargetPos_PUU_;
+  int32_t deltaTargetPos_PUU_;
   double deltaTargetPos_mm_;
-  uint32_t deltaActualPos_PUU_;
+  int32_t deltaActualPos_PUU_;
   double deltaActualPos_mm_;
 
   // Conversion factor [PUU -> mm]
@@ -146,8 +148,8 @@ private:
   hardware_interface::JointStateInterface joint_state_interface_;
   hardware_interface::PositionJointInterface position_joint_interface_;
 
-  // Digital input publisher
-  ros::Publisher digital_input_pub_;
+  // Internal method to read params
+  bool read_params();
 
 public:
 
@@ -156,7 +158,6 @@ public:
 
   void start();
   void configure();
-  bool read_params();
   bool read(const ros::Time time, const ros::Duration period);
   bool write(const ros::Time time, const ros::Duration period);
 
@@ -165,6 +166,9 @@ public:
   bool write_digital_output_array_2outs(kuka_rsi_hw_interface::write_output_bool_array_2outs::Request &req, kuka_rsi_hw_interface::write_output_bool_array_2outs::Response &res);
   bool write_digital_output_array_all_outs(kuka_rsi_hw_interface::write_output_bool_array_all_outs::Request &req, kuka_rsi_hw_interface::write_output_bool_array_all_outs::Response &res);
 
+  std::vector<uint16_t> digital_input() const;
+  uint32_t deltaActualPos_PUU() const;
+  double deltaActualPos_mm() const;
 };
 
 } // namespace kuka_rsi_hw_interface

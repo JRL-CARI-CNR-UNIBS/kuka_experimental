@@ -52,7 +52,7 @@ class RSICommand
 {
 public:
   RSICommand();
-  RSICommand(std::vector<double> position_corrections, std::vector<bool> digital_output_bit, std::vector<uint16_t> digital_output, uint32_t deltaTargetPos_PUU, unsigned long long ipoc, std::string command_type);
+  RSICommand(std::vector<double> position_corrections, std::vector<bool> digital_output_bit, std::vector<uint16_t> digital_output, int32_t deltaTargetPos_PUU, unsigned long long ipoc, std::string command_type);
   std::string xml_doc;
 };
 
@@ -61,7 +61,7 @@ RSICommand::RSICommand()
   // Intentionally empty
 }
 
-RSICommand::RSICommand(std::vector<double> joint_position_correction, std::vector<bool> digital_output_bit, std::vector<uint16_t> digital_output, uint32_t deltaTargetPos_PUU, unsigned long long ipoc, std::string command_type)
+RSICommand::RSICommand(std::vector<double> joint_position_correction, std::vector<bool> digital_output_bit, std::vector<uint16_t> digital_output, int32_t deltaTargetPos_PUU, unsigned long long ipoc, std::string command_type)
 {
   TiXmlDocument doc;
   TiXmlElement* root = new TiXmlElement("Sen");
@@ -131,17 +131,19 @@ RSICommand::RSICommand(std::vector<double> joint_position_correction, std::vecto
 //    out->SetAttribute("Out", std::to_string(digital_output[1]));
     root->LinkEndChild(out_odot);
 
-    TiXmlElement* delta_control = new TiXmlElement("Delta_Control");
-    delta_control->LinkEndChild(new TiXmlText(std::to_string(digital_output[2])));
+    // *** UNCOMMENT TO ACTIVATE DELTA ***
+//    TiXmlElement* delta_control = new TiXmlElement("Delta_Control");
+//    delta_control->LinkEndChild(new TiXmlText(std::to_string(digital_output[2])));
 
-//    out->SetAttribute("Out", std::to_string(digital_output[2]));
-    root->LinkEndChild(delta_control);
+////    out->SetAttribute("Out", std::to_string(digital_output[2]));
+//    root->LinkEndChild(delta_control);
 
-    TiXmlElement* delta_TargetPos = new TiXmlElement("Delta_TargetPos");
-    delta_TargetPos->LinkEndChild(new TiXmlText(std::to_string(deltaTargetPos_PUU)));
+//    TiXmlElement* delta_TargetPos = new TiXmlElement("Delta_TargetPos");
+//    delta_TargetPos->LinkEndChild(new TiXmlText(std::to_string(deltaTargetPos_PUU)));
 
-//    out->SetAttribute("Out", std::to_string(deltaTargetPos_PUU));
-    root->LinkEndChild(delta_TargetPos);
+////    out->SetAttribute("Out", std::to_string(deltaTargetPos_PUU));
+//    root->LinkEndChild(delta_TargetPos);
+    // *** UNCOMMENT TO ACTIVATE DELTA ***
 
   }
   else // (not command_type.compare("none"))

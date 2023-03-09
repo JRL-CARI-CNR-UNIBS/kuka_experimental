@@ -28,6 +28,7 @@ add_service_files(
 
 add_message_files(
   FILES
+  input_data.msg
   uint16_t_array.msg
 )
 

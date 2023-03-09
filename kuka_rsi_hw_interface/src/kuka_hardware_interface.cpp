@@ -70,13 +70,21 @@ KukaHardwareInterface::KukaHardwareInterface() :
   read_params();
 
   // Compute electronic and mechanical gear ratio
+  std::cout << M_PI << std::endl;
   double tau_pinionrack = M_PI * servo_params_.at("pinion_diameter");
+  std::cout << tau_pinionrack << std::endl;
   double tau_mechanical = tau_pinionrack * 1.0 / servo_params_.at("tau_gearbox");
+  std::cout << tau_mechanical << std::endl;
   double electronic_resolution = servo_params_.at("encoder_pulse_number") * servo_params_.at("encoder_resolution_multiplier");
+  std::cout << electronic_resolution << std::endl;
   double electronic_gear_ratio = servo_params_.at("electronic_gear_ratio_feed_constant") / servo_params_.at("electronic_gear_ratio_numerator");
+  std::cout << electronic_gear_ratio << std::endl;
   double n_PUU_per_rev = electronic_resolution * electronic_gear_ratio;
+  std::cout << n_PUU_per_rev << std::endl;
 
   const_PUU2mm_ = tau_mechanical * 1.0 / n_PUU_per_rev;
+  //const_PUU2mm_ = tau_mechanical * 1.0 / 10000.0;
+  std::cout << const_PUU2mm_ << std::endl;
 
   //Create ros_control interface std::string command_type
   for (std::size_t i = 0; i < n_dof_; ++i)
@@ -97,30 +105,29 @@ KukaHardwareInterface::KukaHardwareInterface() :
   registerInterface(&position_joint_interface_);
 
   ROS_INFO_STREAM_NAMED("hardware_interface", "Loaded kuka_rsi_hardware_interface");
-
-  // Publish digital input to ROS topic for debugging
-  if (not test_type_IN_.compare("one_bit"))
-  {
-    digital_input_pub_ = nh_.advertise<std_msgs::Bool>("DIGITAL_INPUT", 100);
-  }
-  else if (not test_type_IN_.compare("array_uint16"))
-  {
-    digital_input_pub_ = nh_.advertise<std_msgs::UInt16>("DIGITAL_INPUT", 100);
-  }
-  else if (not test_type_IN_.compare("array_uint16_2ins"))
-  {
-    digital_input_pub_ = nh_.advertise<kuka_rsi_hw_interface::uint16_t_array>("DIGITAL_INPUT", 100);
-  }
-  else // (not test_type_IN_.compare("none"))
-  {
-
-  }
-
 }
 
 KukaHardwareInterface::~KukaHardwareInterface()
 {
 
+}
+
+// Getter for digital_input
+std::vector<uint16_t> KukaHardwareInterface::digital_input() const
+{
+    return digital_input_;
+}
+
+// Getter for deltaActualPos_PUU
+uint32_t KukaHardwareInterface::deltaActualPos_PUU() const
+{
+    return deltaActualPos_PUU_;
+}
+
+// Getter for deltaActualPos_mm
+double KukaHardwareInterface::deltaActualPos_mm() const
+{
+    return deltaActualPos_mm_;
 }
 
 bool KukaHardwareInterface::read_params()
@@ -228,14 +235,17 @@ bool KukaHardwareInterface::read(const ros::Time time, const ros::Duration perio
   else if (not test_type_IN_.compare("array_uint16_all_ins"))
   {
     digital_input_[0] = rsi_state_.digital_input_beckhoff;
-    std::cout << "Beckhoff: " << digital_input_[0] << std::endl;
+    std::cout << "> Beckhoff: " << digital_input_[0] << " | " << std::bitset<16>(digital_input_[0]) << std::endl;
 
     digital_input_[1] = rsi_state_.digital_input_odot;
-    std::cout << "Odot: " << digital_input_[1] << std::endl;
+    std::cout << "> Odot: " << digital_input_[1] << " | " << std::bitset<16>(digital_input_[1]) << std::endl;
+
+    digital_input_[2] = rsi_state_.digital_input_deltaStatus;
+    std::cout << "> Delta Status Word: " << digital_input_[2] << " | " << std::bitset<16>(digital_input_[2]) << std::endl;
 
     deltaActualPos_PUU_ = rsi_state_.digital_input_deltaActualPos;
-    deltaActualPos_mm_ = const_PUU2mm_ * deltaActualPos_PUU_;
-    std::cout << "Delta Actual Pos: " << deltaActualPos_PUU_ << " [PUU] | " << deltaActualPos_mm_ << " [mm]" << std::endl;
+    deltaActualPos_mm_ = const_PUU2mm_ * (double)deltaActualPos_PUU_;
+    std::cout << "> Delta Actual Pos: " << deltaActualPos_PUU_ << " [PUU] | " << deltaActualPos_mm_ << " [mm]" << std::endl << std::endl;
   }
   else // (not test_type_IN_.compare("none"))
   {
