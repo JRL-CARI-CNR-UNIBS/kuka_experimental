@@ -11,3 +11,4 @@ delta:
   max_motor_speed: 3000.0 # RPM (rated, parameter P1-55 in ASDA software)
   electronic_gear_ratio_feed_constant: 10.0 # (parameter P1-45 in ASDA software)
   electronic_gear_ratio_numerator: 128.0 # (parameter P1-44 in ASDA software)
+  rated_motor_torque: 9.55 # Nm (rated torque)

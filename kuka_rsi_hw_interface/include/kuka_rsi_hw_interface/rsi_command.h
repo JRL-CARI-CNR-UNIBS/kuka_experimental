@@ -42,6 +42,7 @@
 #include <tinyxml.h>
 #include <vector>
 #include <string>
+#include <ros/ros.h>
 
 #define MASK_BYTE 0xFF00
 
@@ -52,7 +53,7 @@ class RSICommand
 {
 public:
   RSICommand();
-  RSICommand(std::vector<double> position_corrections, std::vector<bool> digital_output_bit, std::vector<uint16_t> digital_output, int32_t deltaTargetPos_PUU, unsigned long long ipoc, std::string command_type);
+  RSICommand(std::vector<double> position_corrections, std::vector<bool> digital_output_bit, std::vector<uint16_t> digital_output, int32_t deltaTargetPos_PUU, int32_t deltaTargetVel_PUU, int16_t deltaTargetTor_PUU, int8_t delta_OpMode, unsigned long long ipoc, std::string command_type);
   std::string xml_doc;
 };
 
@@ -61,7 +62,7 @@ RSICommand::RSICommand()
   // Intentionally empty
 }
 
-RSICommand::RSICommand(std::vector<double> joint_position_correction, std::vector<bool> digital_output_bit, std::vector<uint16_t> digital_output, int32_t deltaTargetPos_PUU, unsigned long long ipoc, std::string command_type)
+RSICommand::RSICommand(std::vector<double> joint_position_correction, std::vector<bool> digital_output_bit, std::vector<uint16_t> digital_output, int32_t deltaTargetPos_PUU, int32_t deltaTargetVel_RPM, int16_t deltaTargetTor, int8_t deltaOpMode, unsigned long long ipoc, std::string command_type)
 {
   TiXmlDocument doc;
   TiXmlElement* root = new TiXmlElement("Sen");
@@ -121,29 +122,31 @@ RSICommand::RSICommand(std::vector<double> joint_position_correction, std::vecto
   {
     TiXmlElement* out_beckhoff = new TiXmlElement("Beckhoff_OUT");
     out_beckhoff->LinkEndChild(new TiXmlText(std::to_string(digital_output[0])));
-
-//    out->SetAttribute("Out", std::to_string(digital_output[0]));
     root->LinkEndChild(out_beckhoff);
 
     TiXmlElement* out_odot = new TiXmlElement("Odot_OUT");
     out_odot->LinkEndChild(new TiXmlText(std::to_string(digital_output[1])));
-
-//    out->SetAttribute("Out", std::to_string(digital_output[1]));
     root->LinkEndChild(out_odot);
 
-    // *** UNCOMMENT TO ACTIVATE DELTA ***
-//    TiXmlElement* delta_control = new TiXmlElement("Delta_Control");
-//    delta_control->LinkEndChild(new TiXmlText(std::to_string(digital_output[2])));
+    TiXmlElement* delta_control = new TiXmlElement("Delta_Control");
+    delta_control->LinkEndChild(new TiXmlText(std::to_string(digital_output[2])));
+    root->LinkEndChild(delta_control);
 
-////    out->SetAttribute("Out", std::to_string(digital_output[2]));
-//    root->LinkEndChild(delta_control);
+    TiXmlElement* delta_TargetPos = new TiXmlElement("Delta_TargetPos");
+    delta_TargetPos->LinkEndChild(new TiXmlText(std::to_string(deltaTargetPos_PUU)));
+    root->LinkEndChild(delta_TargetPos);
 
-//    TiXmlElement* delta_TargetPos = new TiXmlElement("Delta_TargetPos");
-//    delta_TargetPos->LinkEndChild(new TiXmlText(std::to_string(deltaTargetPos_PUU)));
+    TiXmlElement* delta_TargetVel = new TiXmlElement("Delta_TargetVel");
+    delta_TargetVel->LinkEndChild(new TiXmlText(std::to_string(deltaTargetVel_RPM)));
+    root->LinkEndChild(delta_TargetVel);
 
-////    out->SetAttribute("Out", std::to_string(deltaTargetPos_PUU));
-//    root->LinkEndChild(delta_TargetPos);
-    // *** UNCOMMENT TO ACTIVATE DELTA ***
+    TiXmlElement* delta_TargetTor = new TiXmlElement("Delta_TargetTor");
+    delta_TargetTor->LinkEndChild(new TiXmlText(std::to_string(deltaTargetTor)));
+    root->LinkEndChild(delta_TargetTor);
+
+    TiXmlElement* delta_OpMode = new TiXmlElement("Delta_OpMode");
+    delta_OpMode->LinkEndChild(new TiXmlText(std::to_string(deltaOpMode)));
+    root->LinkEndChild(delta_OpMode);
 
   }
   else // (not command_type.compare("none"))

@@ -43,6 +43,7 @@
 #include <tinyxml.h>
 #include <vector>
 #include <map>
+#include <ros/ros.h>
 
 #define DEFAULT_N_DOF 6
 
@@ -66,12 +67,15 @@ public:
     digital_input_beckhoff(0),
     digital_input_odot(0),
     digital_input_deltaStatus(0),
-    digital_input_deltaActualPos(0)
+    digital_input_deltaActualPos(0),
+    digital_input_deltaActualVel(0),
+    digital_input_deltaActualTor(0),
+    digital_input_deltaOpModeDisp(0)
   {
     xml_doc_.resize(1024);
   }
 
-  RSIState(std::string xml_doc, std::string state_type,  std::map<std::string, double> servo_params);
+  RSIState(std::string xml_doc, std::string state_type);
   // AIPOS
   std::vector<double> positions;
   // ASPos
@@ -92,10 +96,13 @@ public:
 
   uint16_t digital_input_deltaStatus;
   int32_t digital_input_deltaActualPos;
+  int32_t digital_input_deltaActualVel;
+  int16_t digital_input_deltaActualTor;
+  int8_t digital_input_deltaOpModeDisp;
 
 };
 
-RSIState::RSIState(std::string xml_doc, std::string state_type,  std::map<std::string, double> servo_params) :
+RSIState::RSIState(std::string xml_doc, std::string state_type) :
   xml_doc_(xml_doc),
   positions(DEFAULT_N_DOF, 0.0),
   initial_positions(DEFAULT_N_DOF, 0.0),
@@ -106,7 +113,10 @@ RSIState::RSIState(std::string xml_doc, std::string state_type,  std::map<std::s
   digital_input_beckhoff(0),
   digital_input_odot(0),
   digital_input_deltaStatus(0),
-  digital_input_deltaActualPos(0)
+  digital_input_deltaActualPos(0),
+  digital_input_deltaActualVel(0),
+  digital_input_deltaActualTor(0),
+  digital_input_deltaOpModeDisp(0)
 {
   ROS_WARN_ONCE("String passed to RSIState object: %s", xml_doc_.c_str());
 
@@ -210,6 +220,7 @@ RSIState::RSIState(std::string xml_doc, std::string state_type,  std::map<std::s
     //digital_input_bit_1 = (((uint16_t) std::stoul(bool_string_2)) % 2 == 1); // check if the first bit (LSB) is 1
     std::istringstream(bool_string_2) >> digital_input_odot;
     ROS_WARN("Odot - digital input buffer: %s", bool_string_2.c_str());
+
   }
   else if (not state_type.compare("array_uint16_all_ins"))
   {
@@ -233,6 +244,22 @@ RSIState::RSIState(std::string xml_doc, std::string state_type,  std::map<std::s
     std::string bool_string_4 = digin_el->FirstChild()->Value();
     std::istringstream(bool_string_4) >> digital_input_deltaActualPos;
 //    ROS_WARN("Delta Actual Pos - digital input buffer: %s", bool_string_4.c_str());
+
+    digin_el = rob->FirstChildElement("Delta_ActualVel");
+    std::string bool_string_5 = digin_el->FirstChild()->Value();
+    std::istringstream(bool_string_5) >> digital_input_deltaActualVel;
+//    ROS_WARN("Delta Actual Vel - digital input buffer: %s", bool_string_5.c_str());
+
+    digin_el = rob->FirstChildElement("Delta_ActualTor");
+    std::string bool_string_6 = digin_el->FirstChild()->Value();
+    std::istringstream(bool_string_6) >> digital_input_deltaActualTor;
+//    ROS_WARN("Delta Actual Tor - digital input buffer: %s", bool_string_6.c_str());
+
+    digin_el = rob->FirstChildElement("Delta_OpModeDisp");
+    std::string bool_string_7 = digin_el->FirstChild()->Value();
+    std::istringstream(bool_string_7) >> digital_input_deltaOpModeDisp;
+//    ROS_WARN("Delta Operation Mode Display - digital input buffer: %s", bool_string_7.c_str());
+
   }
   else // (not state_type.compare("none"))
   {

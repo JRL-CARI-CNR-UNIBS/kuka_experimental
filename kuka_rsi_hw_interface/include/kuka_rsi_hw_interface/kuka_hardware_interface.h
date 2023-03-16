@@ -109,17 +109,34 @@ private:
   std::vector<double> joint_position_command_;
   std::vector<double> joint_velocity_command_;
   std::vector<double> joint_effort_command_;
+
   std::vector<bool> digital_output_bit_;
   std::vector<uint16_t> digital_output_;
   std::vector<bool> digital_input_bit_;
   std::vector<uint16_t> digital_input_;
-  int32_t deltaTargetPos_PUU_;
-  double deltaTargetPos_mm_;
-  int32_t deltaActualPos_PUU_;
-  double deltaActualPos_mm_;
 
-  // Conversion factor [PUU -> mm]
-  double const_PUU2mm_;
+  int32_t deltaTargetPos_PUU_;
+  double deltaTargetPos_m_;
+  int32_t deltaTargetVel_RPM_;
+  double deltaTargetVel_mps_;
+  int16_t deltaTargetTor_;
+  float deltaTargetTor_Nm_;
+  int8_t deltaOpMode_;
+
+  int32_t deltaActualPos_PUU_;
+  double deltaActualPos_m_;
+  int32_t deltaActualVel_RPM_;
+  double deltaActualVel_mps_;
+  int16_t deltaActualTor_;
+  float deltaActualTor_Nm_;
+  int8_t deltaOpModeDisp_;
+
+
+  // Constants for unit conversion
+  double const_PUU2m_;      // conversion factor [PUU -> m]
+  double const_rpm2mps_;    // conversion factor [RPM/10 -> m/s]
+  float const_torque2Nm_;   // conversion factor [rated_torque[Nm]/1000 -> Nm]
+
 
   // RSI
   RSIState rsi_state_;
@@ -148,8 +165,9 @@ private:
   hardware_interface::JointStateInterface joint_state_interface_;
   hardware_interface::PositionJointInterface position_joint_interface_;
 
-  // Internal method to read params
+  // Internal method to read params and to compute conversion constants
   bool read_params();
+  bool compute_conversion_constants();
 
 public:
 
@@ -166,9 +184,14 @@ public:
   bool write_digital_output_array_2outs(kuka_rsi_hw_interface::write_output_bool_array_2outs::Request &req, kuka_rsi_hw_interface::write_output_bool_array_2outs::Response &res);
   bool write_digital_output_array_all_outs(kuka_rsi_hw_interface::write_output_bool_array_all_outs::Request &req, kuka_rsi_hw_interface::write_output_bool_array_all_outs::Response &res);
 
+  // Getter methods
   std::vector<uint16_t> digital_input() const;
   uint32_t deltaActualPos_PUU() const;
-  double deltaActualPos_mm() const;
+  double deltaActualPos_m() const;
+  int32_t deltaActualVel_RPM() const;
+  double deltaActualVel_mps() const;
+  int16_t deltaActualTor() const;
+  float deltaActualTor_Nm() const;
 };
 
 } // namespace kuka_rsi_hw_interface

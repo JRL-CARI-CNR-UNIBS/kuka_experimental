@@ -1,5 +1,8 @@
-uint16 out1
-uint16 out2
-uint16 out3
-uint32 out4
+uint16 Beckhoff
+uint16 Odot
+uint16 DeltaControlWord
+int32 DeltaTargetPos
+int32 DeltaTargetVel
+int16 DeltaTargetTor
+byte DeltaOpMode
 ---
