@@ -1,7 +1,7 @@
 rsi:
   n_dof: 6
   test_type_IN: "array_uint16_all_ins"
-  test_type_OUT: "array_uint16_2outs"
+  test_type_OUT: "array_uint16_all_outs"
     
 delta:
   tau_gearbox: 6.0 # (motor velocity / load velocity)

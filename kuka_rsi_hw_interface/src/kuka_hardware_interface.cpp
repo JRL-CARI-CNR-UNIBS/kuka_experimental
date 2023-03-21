@@ -44,10 +44,6 @@
 #define _USE_MATH_DEFINES
 #include <cmath>
 
-//#ifndef M_PI
-//#define M_PI (3.14159265358979323846)
-//#endif
-
 #define DEFAULT_N_DOF 6
 #define N_DIGOUT 16
 
@@ -290,15 +286,15 @@ bool KukaHardwareInterface::read(const ros::Time time, const ros::Duration perio
 
     deltaActualPos_PUU_ = rsi_state_.digital_input_deltaActualPos;
     deltaActualPos_m_ = const_PUU2m_ * (double)deltaActualPos_PUU_;
-    std::cout << "> Delta Actual Pos: " << deltaActualPos_PUU_ << " [PUU] | " << deltaActualPos_m_ << " [m]" << std::endl << std::endl;
+    std::cout << "> Delta Actual Pos: " << deltaActualPos_PUU_ << " [PUU] | " << deltaActualPos_m_ << " [m]" << std::endl;
 
     deltaActualVel_RPM_ = rsi_state_.digital_input_deltaActualVel;
     deltaActualVel_mps_ = const_rpm2mps_ * (double)deltaActualVel_RPM_;
-    std::cout << "> Delta Actual Vel: " << deltaActualVel_RPM_ << " [RPM/10] | " << deltaActualVel_mps_ << " [m/s]" << std::endl << std::endl;
+    std::cout << "> Delta Actual Vel: " << deltaActualVel_RPM_ << " [RPM/10] | " << deltaActualVel_mps_ << " [m/s]" << std::endl;
 
     deltaActualTor_ = rsi_state_.digital_input_deltaActualTor;
     deltaActualTor_Nm_ = const_torque2Nm_ * (float)deltaActualTor_;
-    std::cout << "> Delta Actual Tor: " << deltaActualTor_ << " [rated_torque[Nm]/1000] | " << deltaActualTor_Nm_ << " [Nm]" << std::endl << std::endl;
+    std::cout << "> Delta Actual Tor: " << deltaActualTor_ << " [rated_torque[Nm]/1000] | " << deltaActualTor_Nm_ << " [Nm]" << std::endl;
 
     deltaOpModeDisp_ = rsi_state_.digital_input_deltaOpModeDisp;
     std::cout << "> Delta Operation Mode: " << deltaOpModeDisp_ << std::endl << std::endl;

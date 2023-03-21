@@ -121,7 +121,7 @@ private:
   double deltaTargetVel_mps_;
   int16_t deltaTargetTor_;
   float deltaTargetTor_Nm_;
-  int8_t deltaOpMode_;
+  uint8_t deltaOpMode_;
 
   int32_t deltaActualPos_PUU_;
   double deltaActualPos_m_;
@@ -129,7 +129,7 @@ private:
   double deltaActualVel_mps_;
   int16_t deltaActualTor_;
   float deltaActualTor_Nm_;
-  int8_t deltaOpModeDisp_;
+  uint8_t deltaOpModeDisp_;
 
 
   // Constants for unit conversion
