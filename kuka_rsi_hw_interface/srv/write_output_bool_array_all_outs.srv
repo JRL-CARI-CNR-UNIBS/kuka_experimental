@@ -1,8 +1,8 @@
 uint16 Beckhoff
 uint16 Odot
 uint16 DeltaControlWord
-int32 DeltaTargetPos
-int32 DeltaTargetVel
-int16 DeltaTargetTor
+float64 DeltaTargetPos
+float64 DeltaTargetVel
+float32 DeltaTargetTor
 byte DeltaOpMode
 ---

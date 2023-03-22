@@ -366,15 +366,13 @@ bool KukaHardwareInterface::write_digital_output_array_all_outs(kuka_rsi_hw_inte
   digital_output_[2] = req.DeltaControlWord;
 
   deltaTargetPos_m_ = req.DeltaTargetPos;
-  deltaTargetPos_PUU_ = 1.0 / const_PUU2m_ * deltaTargetPos_m_;
+  deltaTargetPos_PUU_ = (int32_t) (1.0 / const_PUU2m_ * deltaTargetPos_m_);
 
-  deltaTargetVel_mps_ = 0; // req.DeltaTargetVel;
-  deltaTargetVel_RPM_ = 1.0 / const_rpm2mps_ * deltaTargetVel_mps_;
-  std::cout << "Target velocity has been forced to 0 for safety reeasons!" << std::endl;
+  deltaTargetVel_mps_ = req.DeltaTargetVel;
+  deltaTargetVel_RPM_ = (int32_t) (1.0 / const_rpm2mps_ * deltaTargetVel_mps_);
 
-  deltaTargetTor_Nm_ = 0; // req.DeltaTargetTor;
-  deltaTargetTor_ = 1.0 / const_torque2Nm_ * deltaTargetTor_Nm_;
-  std::cout << "Target torque has been forced to 0 for safety reeasons!" << std::endl;
+  deltaTargetTor_Nm_ = req.DeltaTargetTor;
+  deltaTargetTor_ = (int16_t) (1.0 / const_torque2Nm_ * deltaTargetTor_Nm_);
 
   deltaOpMode_ = req.DeltaOpMode;
   std::cout << "Selected Operation Mode: " << deltaOpMode_ << std::endl;
