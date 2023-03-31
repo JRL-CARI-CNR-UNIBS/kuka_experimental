@@ -210,8 +210,8 @@ bool KukaHardwareInterface::compute_conversion_constants()
   double n_PUU_per_rev = electronic_resolution * electronic_gear_ratio;
   std::cout << n_PUU_per_rev << std::endl << std::endl;
 
-  const_PUU2m_ = 0.001 * tau_mechanical * 1.0 / n_PUU_per_rev;
-  std::cout << "const_PUU2mm_: " << const_PUU2m_ << " m/PUU" << std::endl << std::endl;
+  const_PUU2m_ = 0.001 * tau_mechanical * 1.0 / n_PUU_per_rev * 0.1; // *0.1 hard-coded
+  std::cout << "const_PUU2m_: " << const_PUU2m_ << " m/PUU" << std::endl << std::endl;
 
   // Velocity conversion
   const_rpm2mps_ = tau_mechanical * 0.001 * 1.0/60.0 * 1.0/10.0;
