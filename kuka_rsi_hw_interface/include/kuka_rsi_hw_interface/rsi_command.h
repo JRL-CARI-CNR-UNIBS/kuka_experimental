@@ -53,7 +53,7 @@ class RSICommand
 {
 public:
   RSICommand();
-  RSICommand(std::vector<double> position_corrections, std::vector<bool> digital_output_bit, std::vector<uint16_t> digital_output, int32_t deltaTargetPos_PUU, int32_t deltaTargetVel_PUU, int16_t deltaTargetTor_PUU, int8_t delta_OpMode, unsigned long long ipoc, std::string command_type);
+  RSICommand(std::vector<double> joint_position_correction, std::vector<bool> digital_output_bit, std::vector<uint16_t> digital_output, int32_t deltaTargetPos_PUU, int32_t deltaTargetVel_RPM, int16_t deltaTargetTor, int8_t deltaOpMode, uint32_t delta_AccelTime, uint32_t delta_DecelTime, uint32_t delta_ProfileVel, unsigned long long ipoc, std::string command_type);
   std::string xml_doc;
 };
 
@@ -62,7 +62,7 @@ RSICommand::RSICommand()
   // Intentionally empty
 }
 
-RSICommand::RSICommand(std::vector<double> joint_position_correction, std::vector<bool> digital_output_bit, std::vector<uint16_t> digital_output, int32_t deltaTargetPos_PUU, int32_t deltaTargetVel_RPM, int16_t deltaTargetTor, int8_t deltaOpMode, unsigned long long ipoc, std::string command_type)
+RSICommand::RSICommand(std::vector<double> joint_position_correction, std::vector<bool> digital_output_bit, std::vector<uint16_t> digital_output, int32_t deltaTargetPos_PUU, int32_t deltaTargetVel_RPM, int16_t deltaTargetTor, int8_t deltaOpMode, uint32_t deltaAccelTime, uint32_t deltaDecelTime, uint32_t deltaProfileVel, unsigned long long ipoc, std::string command_type)
 {
   TiXmlDocument doc;
   TiXmlElement* root = new TiXmlElement("Sen");
@@ -147,6 +147,18 @@ RSICommand::RSICommand(std::vector<double> joint_position_correction, std::vecto
     TiXmlElement* delta_OpMode = new TiXmlElement("Delta_OpMode");
     delta_OpMode->LinkEndChild(new TiXmlText(std::to_string(deltaOpMode)));
     root->LinkEndChild(delta_OpMode);
+
+    TiXmlElement* delta_AccelTime = new TiXmlElement("Delta_AccelTime");
+    delta_AccelTime->LinkEndChild(new TiXmlText(std::to_string(deltaAccelTime)));
+    root->LinkEndChild(delta_AccelTime);
+
+    TiXmlElement* delta_DecelTime = new TiXmlElement("Delta_DecelTime");
+    delta_DecelTime->LinkEndChild(new TiXmlText(std::to_string(deltaDecelTime)));
+    root->LinkEndChild(delta_DecelTime);
+
+    TiXmlElement* delta_ProfileVel = new TiXmlElement("Delta_ProfileVel");
+    delta_ProfileVel->LinkEndChild(new TiXmlText(std::to_string(deltaProfileVel)));
+    root->LinkEndChild(delta_ProfileVel);
 
   }
   else // (not command_type.compare("none"))

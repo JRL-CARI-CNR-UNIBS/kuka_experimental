@@ -59,7 +59,9 @@ KukaHardwareInterface::KukaHardwareInterface() :
     deltaTargetPos_PUU_(0), deltaTargetPos_m_(0.0), deltaTargetVel_RPM_(0), deltaTargetVel_mps_(0.0),
     deltaTargetTor_(0), deltaTargetTor_Nm_(0.0), deltaOpMode_(0),
     deltaActualPos_PUU_(0), deltaActualPos_m_(0.0), deltaActualVel_RPM_(0), deltaActualVel_mps_(0.0),
-    deltaActualTor_(0), deltaActualTor_Nm_(0.0), deltaOpModeDisp_(0)
+    deltaActualTor_(0), deltaActualTor_Nm_(0.0), deltaOpModeDisp_(0),
+    deltaAccelTime_ms_(0), deltaAccelTime_s_(0.0), deltaDecelTime_ms_(0), deltaDecelTime_s_(0.0),
+    deltaProfileVel_RPM_(0), deltaProfileVel_mps_(0.0)
 {
   in_buffer_.resize(1024);
   out_buffer_.resize(1024);
@@ -298,6 +300,19 @@ bool KukaHardwareInterface::read(const ros::Time time, const ros::Duration perio
 
     deltaOpModeDisp_ = rsi_state_.digital_input_deltaOpModeDisp;
     std::cout << "> Delta Operation Mode: " << deltaOpModeDisp_ << std::endl << std::endl;
+
+    deltaAccelTime_ms_ = rsi_state_.digital_input_deltaActualTor;
+    deltaActualTor_Nm_ = const_torque2Nm_ * (float)deltaActualTor_;
+    std::cout << "> Delta Actual Tor: " << deltaActualTor_ << " [rated_torque[Nm]/1000] | " << deltaActualTor_Nm_ << " [Nm]" << std::endl;
+
+    deltaActualTor_ = rsi_state_.digital_input_deltaActualTor;
+    deltaActualTor_Nm_ = const_torque2Nm_ * (float)deltaActualTor_;
+    std::cout << "> Delta Actual Tor: " << deltaActualTor_ << " [rated_torque[Nm]/1000] | " << deltaActualTor_Nm_ << " [Nm]" << std::endl;
+
+    deltaActualTor_ = rsi_state_.digital_input_deltaActualTor;
+    deltaActualTor_Nm_ = const_torque2Nm_ * (float)deltaActualTor_;
+    std::cout << "> Delta Actual Tor: " << deltaActualTor_ << " [rated_torque[Nm]/1000] | " << deltaActualTor_Nm_ << " [Nm]" << std::endl;
+
   }
   else // (not test_type_IN_.compare("none"))
   {
@@ -320,6 +335,7 @@ bool KukaHardwareInterface::write(const ros::Time time, const ros::Duration peri
 
   out_buffer_ = RSICommand(rsi_joint_position_corrections_, digital_output_bit_, digital_output_,
                            deltaTargetPos_PUU_, deltaTargetVel_RPM_, deltaTargetTor_, deltaOpMode_,
+                           deltaAccelTime_ms_, deltaDecelTime_ms_, deltaProfileVel_RPM_,
                            ipoc_, test_type_OUT_).xml_doc;
   server_->send(out_buffer_);
 
@@ -416,6 +432,7 @@ void KukaHardwareInterface::start()
   ROS_WARN_ONCE("Sending command in start function...");
   out_buffer_ = RSICommand(rsi_joint_position_corrections_, digital_output_bit_, digital_output_,
                            deltaTargetPos_PUU_, deltaTargetVel_RPM_, deltaTargetTor_, deltaOpMode_,
+                           deltaAccelTime_ms_, deltaDecelTime_ms_, deltaProfileVel_RPM_,
                            ipoc_, test_type_OUT_).xml_doc;
   ROS_WARN_ONCE("Command sent in start function.");
 

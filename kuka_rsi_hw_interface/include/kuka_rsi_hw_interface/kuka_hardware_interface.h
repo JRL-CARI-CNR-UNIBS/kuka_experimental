@@ -122,6 +122,9 @@ private:
   int16_t deltaTargetTor_;
   float deltaTargetTor_Nm_;
   uint8_t deltaOpMode_;
+  uint32_t deltaAccelTime_ms_;
+  uint32_t deltaDecelTime_ms_;
+  uint32_t deltaProfileVel_RPM_;
 
   int32_t deltaActualPos_PUU_;
   double deltaActualPos_m_;
@@ -130,6 +133,9 @@ private:
   int16_t deltaActualTor_;
   float deltaActualTor_Nm_;
   uint8_t deltaOpModeDisp_;
+  uint32_t deltaAccelTimeDisp_ms_;
+  uint32_t deltaDecelTimeDisp_ms_;
+  uint32_t deltaProfileVelDisp_RPM_;
 
 
   // Constants for unit conversion

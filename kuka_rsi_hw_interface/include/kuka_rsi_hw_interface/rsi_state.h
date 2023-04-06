@@ -70,7 +70,10 @@ public:
     digital_input_deltaActualPos(0),
     digital_input_deltaActualVel(0),
     digital_input_deltaActualTor(0),
-    digital_input_deltaOpModeDisp(0)
+    digital_input_deltaOpModeDisp(0),
+    digital_input_deltaAccelTimeDisp(0),
+    digital_input_deltaDecelTimeDisp(0),
+    digital_input_deltaProfileVelDisp(0)
   {
     xml_doc_.resize(1024);
   }
@@ -99,7 +102,10 @@ public:
   int32_t digital_input_deltaActualVel;
   int16_t digital_input_deltaActualTor;
   int8_t digital_input_deltaOpModeDisp;
-
+  uint32_t digital_input_deltaAccelTimeDisp;
+  uint32_t digital_input_deltaDecelTimeDisp;
+  uint32_t digital_input_deltaProfileVelDisp;
+  std::vector<int16_t> analog_input_beckhoff;
 };
 
 RSIState::RSIState(std::string xml_doc, std::string state_type) :
@@ -116,7 +122,10 @@ RSIState::RSIState(std::string xml_doc, std::string state_type) :
   digital_input_deltaActualPos(0),
   digital_input_deltaActualVel(0),
   digital_input_deltaActualTor(0),
-  digital_input_deltaOpModeDisp(0)
+  digital_input_deltaOpModeDisp(0),
+  digital_input_deltaAccelTimeDisp(0),
+  digital_input_deltaDecelTimeDisp(0),
+  digital_input_deltaProfileVelDisp(0)
 {
   ROS_WARN_ONCE("String passed to RSIState object: %s", xml_doc_.c_str());
 
@@ -259,6 +268,21 @@ RSIState::RSIState(std::string xml_doc, std::string state_type) :
     std::string bool_string_7 = digin_el->FirstChild()->Value();
     std::istringstream(bool_string_7) >> digital_input_deltaOpModeDisp;
 //    ROS_WARN("Delta Operation Mode Display - digital input buffer: %s", bool_string_7.c_str());
+
+    digin_el = rob->FirstChildElement("Delta_AccelTimeDisp");
+    std::string bool_string_8 = digin_el->FirstChild()->Value();
+    std::istringstream(bool_string_7) >> digital_input_deltaAccelTimeDisp;
+//    ROS_WARN("Delta Acceleration Time Display - digital input buffer: %s", bool_string_8.c_str());
+
+    digin_el = rob->FirstChildElement("Delta_DecelTimeDisp");
+    std::string bool_string_9 = digin_el->FirstChild()->Value();
+    std::istringstream(bool_string_7) >> digital_input_deltaDecelTimeDisp;
+//    ROS_WARN("Delta Deceleration Time Display - digital input buffer: %s", bool_string_9.c_str());
+
+    digin_el = rob->FirstChildElement("Delta_ProfileVelDisp");
+    std::string bool_string_10 = digin_el->FirstChild()->Value();
+    std::istringstream(bool_string_7) >> digital_input_deltaProfileVelDisp;
+//    ROS_WARN("Delta Profile Velocity Display - digital input buffer: %s", bool_string_10.c_str());
 
   }
   else // (not state_type.compare("none"))
