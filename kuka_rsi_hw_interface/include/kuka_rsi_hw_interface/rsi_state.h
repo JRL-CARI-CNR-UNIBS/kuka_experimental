@@ -46,6 +46,7 @@
 #include <ros/ros.h>
 
 #define DEFAULT_N_DOF 6
+#define N_ANALOG_IN 8
 
 namespace kuka_rsi_hw_interface
 {
@@ -73,7 +74,8 @@ public:
     digital_input_deltaOpModeDisp(0),
     digital_input_deltaAccelTimeDisp(0),
     digital_input_deltaDecelTimeDisp(0),
-    digital_input_deltaProfileVelDisp(0)
+    digital_input_deltaProfileVelDisp(0),
+    analog_input_beckhoff(N_ANALOG_IN, 0)
   {
     xml_doc_.resize(1024);
   }
@@ -125,7 +127,8 @@ RSIState::RSIState(std::string xml_doc, std::string state_type) :
   digital_input_deltaOpModeDisp(0),
   digital_input_deltaAccelTimeDisp(0),
   digital_input_deltaDecelTimeDisp(0),
-  digital_input_deltaProfileVelDisp(0)
+  digital_input_deltaProfileVelDisp(0),
+  analog_input_beckhoff(N_ANALOG_IN, 0)
 {
   ROS_WARN_ONCE("String passed to RSIState object: %s", xml_doc_.c_str());
 
@@ -283,6 +286,16 @@ RSIState::RSIState(std::string xml_doc, std::string state_type) :
     std::string bool_string_10 = digin_el->FirstChild()->Value();
     std::istringstream(bool_string_7) >> digital_input_deltaProfileVelDisp;
 //    ROS_WARN("Delta Profile Velocity Display - digital input buffer: %s", bool_string_10.c_str());
+
+    for (int i=0; i<N_ANALOG_IN; ++i)
+    {
+      std::string module("Beckhoff_AnalogIN_Ch");
+      module.append(std::to_string(i+1));
+      digin_el = rob->FirstChildElement(module);
+      std::string bool_string_11 = digin_el->FirstChild()->Value();
+      std::istringstream(bool_string_11) >> analog_input_beckhoff[i];
+//      ROS_WARN_STREAM("Beckhoff Analog IN[" << i+1 << "]: " << bool_string_11.c_str());
+    }
 
   }
   else // (not state_type.compare("none"))

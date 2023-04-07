@@ -114,6 +114,7 @@ private:
   std::vector<uint16_t> digital_output_;
   std::vector<bool> digital_input_bit_;
   std::vector<uint16_t> digital_input_;
+  std::vector<int16_t> analog_input_;
 
   int32_t deltaTargetPos_PUU_;
   double deltaTargetPos_m_;
@@ -122,9 +123,12 @@ private:
   int16_t deltaTargetTor_;
   float deltaTargetTor_Nm_;
   uint8_t deltaOpMode_;
-  uint32_t deltaAccelTime_ms_;
+  uint32_t deltaAccelTime_ms_; // time from 0 RPM to 3000 RPM
+  double deltaAccelTime_s_;
   uint32_t deltaDecelTime_ms_;
-  uint32_t deltaProfileVel_RPM_;
+  double deltaDecelTime_s_;
+  uint32_t deltaProfileVel_PUUps_;
+  double deltaProfileVel_mps_;
 
   int32_t deltaActualPos_PUU_;
   double deltaActualPos_m_;
@@ -134,15 +138,18 @@ private:
   float deltaActualTor_Nm_;
   uint8_t deltaOpModeDisp_;
   uint32_t deltaAccelTimeDisp_ms_;
+  double deltaAccelTimeDisp_s_;
   uint32_t deltaDecelTimeDisp_ms_;
-  uint32_t deltaProfileVelDisp_RPM_;
+  double deltaDecelTimeDisp_s_;
+  uint32_t deltaProfileVelDisp_PUUps_;
+  double deltaProfileVelDisp_mps_;
 
 
   // Constants for unit conversion
   double const_PUU2m_;      // conversion factor [PUU -> m]
   double const_rpm2mps_;    // conversion factor [RPM/10 -> m/s]
   float const_torque2Nm_;   // conversion factor [rated_torque[Nm]/1000 -> Nm]
-
+  double const_ms2s_;    // conversion factor [ms -> s]
 
   // RSI
   RSIState rsi_state_;

@@ -57,7 +57,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
-#define BUFSIZE 1024
+#define BUFSIZE 2048 //1024
 
 class UDPServer
 {
