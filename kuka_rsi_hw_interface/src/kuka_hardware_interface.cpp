@@ -320,11 +320,11 @@ bool KukaHardwareInterface::read(const ros::Time time, const ros::Duration perio
     deltaProfileVel_mps_ = const_PUU2m_ * (float)deltaProfileVel_PUUps_;
     std::cout << "> Delta Profile Vel: " << deltaProfileVel_PUUps_ << " [PUU/s] | " << deltaProfileVel_mps_ << " [m/s]" << std::endl;
 
-//    for (int i=0; i<N_ANALOG_IN; ++i)
-//    {
-//      analog_input_[i] = rsi_state_.analog_input_beckhoff[i];
-//      std::cout << "> Analog Input [Ch" << i+1 << "]: " << analog_input_[i] << std::endl;
-//    }
+    for (int i=0; i<N_ANALOG_IN; ++i)
+    {
+      analog_input_[i] = rsi_state_.analog_input_beckhoff[i];
+      std::cout << "> Analog Input [Ch" << i+1 << "]: " << analog_input_[i] << std::endl;
+    }
   }
   else // (not test_type_IN_.compare("none"))
   {

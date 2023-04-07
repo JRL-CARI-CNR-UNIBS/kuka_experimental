@@ -289,15 +289,15 @@ RSIState::RSIState(std::string xml_doc, std::string state_type) :
     std::istringstream(bool_string_7) >> digital_input_deltaProfileVelDisp;
 //    ROS_WARN("Delta Profile Velocity Display - digital input buffer: %s", bool_string_10.c_str());
 
-//    for (int i=0; i<N_ANALOG_IN; ++i)
-//    {
-//      std::string module("Beckhoff_AnalogIN_Ch");
-//      module.append(std::to_string(i+1));
-//      digin_el = rob->FirstChildElement(module);
-//      std::string bool_string_11 = digin_el->FirstChild()->Value();
-//      std::istringstream(bool_string_11) >> analog_input_beckhoff[i];
-////      ROS_WARN_STREAM("Beckhoff Analog IN[" << i+1 << "]: " << bool_string_11.c_str());
-//    }
+    for (int i=0; i<N_ANALOG_IN; ++i)
+    {
+      std::string module("Beckhoff_AnalogIN_Ch");
+      module.append(std::to_string(i+1));
+      digin_el = rob->FirstChildElement(module);
+      std::string bool_string_11 = digin_el->FirstChild()->Value();
+      std::istringstream(bool_string_11) >> analog_input_beckhoff[i];
+//      ROS_WARN_STREAM("Beckhoff Analog IN[" << i+1 << "]: " << bool_string_11.c_str());
+    }
 
   }
   else // (not state_type.compare("none"))
