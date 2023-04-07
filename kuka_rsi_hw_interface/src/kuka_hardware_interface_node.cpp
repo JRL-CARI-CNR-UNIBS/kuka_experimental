@@ -76,7 +76,6 @@ int main(int argc, char** argv)
   period.fromSec(std::chrono::duration_cast<std::chrono::duration<double>>(stopwatch_now - stopwatch_last).count());
   stopwatch_last = stopwatch_now;
 
-  sleep(10);
   // Run as fast as possible
   int cycles = 0;
   while (ros::ok())
