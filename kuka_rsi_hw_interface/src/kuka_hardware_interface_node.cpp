@@ -66,11 +66,6 @@ int main(int argc, char** argv)
   ros::ServiceServer server_array_2outs = nh.advertiseService(ros::names::append(ros::this_node::getName(),"/write_digital_output_array_2outs"), &kuka_rsi_hw_interface::KukaHardwareInterface::write_digital_output_array_2outs, &kuka_rsi_hw_interface);
   ros::ServiceServer server_array_all_outs = nh.advertiseService(ros::names::append(ros::this_node::getName(),"/write_digital_output_array_all_outs"), &kuka_rsi_hw_interface::KukaHardwareInterface::write_digital_output_array_all_outs, &kuka_rsi_hw_interface);
 
-
-  // Digital input publisher
-  ros::Publisher digital_input_pub_ = nh.advertise<kuka_rsi_hw_interface::input_data>("input_data", 1000);
-
-
   controller_manager::ControllerManager controller_manager(&kuka_rsi_hw_interface, nh);
 
   kuka_rsi_hw_interface.start();
@@ -81,38 +76,21 @@ int main(int argc, char** argv)
   period.fromSec(std::chrono::duration_cast<std::chrono::duration<double>>(stopwatch_now - stopwatch_last).count());
   stopwatch_last = stopwatch_now;
 
-
+  sleep(10);
   // Run as fast as possible
   int cycles = 0;
   while (ros::ok())
   //while (!g_quit)
   {
-    ROS_INFO_ONCE("Reading");
+    ROS_INFO("Reading state...");
     // Receive current state from robot
     if (!kuka_rsi_hw_interface.read(timestamp, period))
     {
       ROS_FATAL_NAMED("kuka_hardware_interface", "Failed to read state from robot. Shutting down! Cycles = %d", cycles);
       ros::shutdown();
     }
-    ROS_INFO_ONCE("Read!");
-
-    // Publish State of external inputs to ROS topic
-//    kuka_rsi_hw_interface::input_data msg;
-//    ROS_INFO_ONCE("1");
-//    msg.names = {"Beckhoff", "Odot", "Delta Status Word", "Delta Actual Pos [PUU]", "Delta Actual Pos [mm]"};
-//    ROS_INFO_ONCE("2");
-//    msg.digital_inputs[0] = kuka_rsi_hw_interface.digital_input()[0];
-//    ROS_INFO_ONCE("3");
-//    msg.digital_inputs[1] = kuka_rsi_hw_interface.digital_input()[1];
-//    ROS_INFO_ONCE("4");
-//    msg.delta_Status = kuka_rsi_hw_interface.digital_input()[2];
-//    ROS_INFO_ONCE("5");
-//    msg.delta_ActualPos_PUU = kuka_rsi_hw_interface.deltaActualPos_PUU();
-//    ROS_INFO_ONCE("6");
-//    msg.delta_ActualPos_mm = kuka_rsi_hw_interface.deltaActualPos_mm();
-//    ROS_INFO_ONCE("7");
-//    digital_input_pub_.publish(msg);
-//    ROS_INFO_ONCE("8");
+    ROS_INFO("State read.");
+    std::cout << std::endl;
 
     // Get current time and elapsed time since last read
     timestamp = ros::Time::now();
@@ -121,12 +99,16 @@ int main(int argc, char** argv)
     stopwatch_last = stopwatch_now;
 
     // Update the controllers
+    ROS_INFO("Updating controllers...");
     controller_manager.update(timestamp, period);
+    ROS_INFO("Controllers updated.");
+    std::cout << std::endl;
 
     // Send new setpoint to robot
-    ROS_INFO_ONCE("Writing");
+    ROS_INFO("Writing command...");
     kuka_rsi_hw_interface.write(timestamp, period);
-    ROS_INFO_ONCE("Written!");
+    ROS_INFO("Command written.");
+    std::cout << std::endl;
 
     cycles++;
   }

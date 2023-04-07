@@ -48,6 +48,7 @@
 #define N_DIGOUT 16
 #define N_ANALOG_IN 8
 #define BUFF_SIZE 2048
+#define RECV_TIMEOUT 1000
 
 namespace kuka_rsi_hw_interface
 {
@@ -205,29 +206,28 @@ bool KukaHardwareInterface::compute_conversion_constants()
 {
   // Position conversion
   double tau_pinionrack = M_PI * servo_params_.at("pinion_diameter");
-  std::cout << tau_pinionrack << std::endl;
+//  std::cout << tau_pinionrack << std::endl;
   double tau_mechanical = tau_pinionrack * 1.0 / servo_params_.at("tau_gearbox");
-  std::cout << tau_mechanical << std::endl;
+//  std::cout << tau_mechanical << std::endl;
   double electronic_resolution = servo_params_.at("encoder_pulse_number") * servo_params_.at("encoder_resolution_multiplier");
-  std::cout << electronic_resolution << std::endl;
+//  std::cout << electronic_resolution << std::endl;
   double electronic_gear_ratio = servo_params_.at("electronic_gear_ratio_feed_constant") / servo_params_.at("electronic_gear_ratio_numerator");
-  std::cout << electronic_gear_ratio << std::endl;
+//  std::cout << electronic_gear_ratio << std::endl;
   double n_PUU_per_rev = electronic_resolution * electronic_gear_ratio;
-  std::cout << n_PUU_per_rev << std::endl << std::endl;
+//  std::cout << n_PUU_per_rev << std::endl << std::endl;
 
   const_PUU2m_ = 0.001 * tau_mechanical * 1.0 / n_PUU_per_rev * 0.1; // *0.1 hard-coded
-  std::cout << "const_PUU2m_: " << const_PUU2m_ << " m/PUU" << std::endl << std::endl;
+  std::cout << "const_PUU2m_: " << const_PUU2m_ << " m/PUU" << std::endl;
 
   // Velocity conversion
   const_rpm2mps_ = tau_mechanical * 0.001 * 1.0/60.0 * 1.0/10.0;
-  std::cout << "const_rpm2mps_: " << const_rpm2mps_ << " m/s / (0.1*RPM)" << std::endl << std::endl;
+  std::cout << "const_rpm2mps_: " << const_rpm2mps_ << " m/s / (0.1*RPM)" << std::endl;
 
   // Torque conversion
   double rated_torque = servo_params_.at("rated_motor_torque");
-  std::cout << rated_torque << std::endl << std::endl;
-
+//  std::cout << rated_torque << std::endl << std::endl;
   const_torque2Nm_ = 1000.0 * rated_torque;
-  std::cout << "const_torque2Nm_: " << const_torque2Nm_ << " Nm" << std::endl << std::endl;
+  std::cout << "const_torque2Nm_: " << const_torque2Nm_ << " Nm" << std::endl;
 
   // Acceleration/Deceleration Time conversion
   const_ms2s_ = 1000.0;
@@ -239,18 +239,18 @@ bool KukaHardwareInterface::compute_conversion_constants()
 bool KukaHardwareInterface::read(const ros::Time time, const ros::Duration period)
 {
   in_buffer_.resize(BUFF_SIZE);
+
   if (server_->recv(in_buffer_) == 0)
   {
+    ROS_WARN("Read state: empty buffer!");
     return false;
   }
-//ROS_WARN("here1");
   if (rt_rsi_recv_->trylock()){
     rt_rsi_recv_->msg_.data = in_buffer_;
     rt_rsi_recv_->unlockAndPublish();
   }
-//ROS_WARN("here2");
-
   rsi_state_ = RSIState(in_buffer_, test_type_IN_);
+
   for (std::size_t i = 0; i < n_dof_; ++i)
   {
     joint_position_[i] = DEG2RAD * rsi_state_.positions[i];
@@ -320,20 +320,16 @@ bool KukaHardwareInterface::read(const ros::Time time, const ros::Duration perio
     deltaProfileVel_mps_ = const_PUU2m_ * (float)deltaProfileVel_PUUps_;
     std::cout << "> Delta Profile Vel: " << deltaProfileVel_PUUps_ << " [PUU/s] | " << deltaProfileVel_mps_ << " [m/s]" << std::endl;
 
-    for (int i=0; i<N_ANALOG_IN; ++i)
-    {
-      analog_input_[i] = rsi_state_.analog_input_beckhoff[i];
-      std::cout << "> Analog Input [Ch" << i+1 << "]: " << analog_input_[i] << std::endl;
-    }
-    std::cout << std::endl;
-
+//    for (int i=0; i<N_ANALOG_IN; ++i)
+//    {
+//      analog_input_[i] = rsi_state_.analog_input_beckhoff[i];
+//      std::cout << "> Analog Input [Ch" << i+1 << "]: " << analog_input_[i] << std::endl;
+//    }
   }
   else // (not test_type_IN_.compare("none"))
   {
 
   }
-
-  // digital_input_pub_.publish(msg);
 
   return true;
 }
@@ -405,9 +401,18 @@ bool KukaHardwareInterface::write_digital_output_array_all_outs(kuka_rsi_hw_inte
   deltaTargetTor_ = (int16_t) (1.0 / const_torque2Nm_ * deltaTargetTor_Nm_);
 
   deltaOpMode_ = req.DeltaOpMode;
-  std::cout << "Selected Operation Mode: " << deltaOpMode_ << std::endl;
+//  std::cout << "Selected Operation Mode: " << deltaOpMode_ << std::endl;
 
-  std::cout << "Command sent: " << out_buffer_.c_str() << std::endl;
+  deltaAccelTime_s_ = req.DeltaAccelTime;
+  deltaAccelTime_ms_ = (int32_t) (1.0 / const_ms2s_ * deltaAccelTime_s_);
+
+  deltaDecelTime_s_ = req.DeltaDecelTime;
+  deltaDecelTime_ms_ = (int32_t) (1.0 / const_ms2s_ * deltaDecelTime_s_);
+
+  deltaProfileVel_mps_ = req.DeltaProfileVel;
+  deltaProfileVel_PUUps_ = (int32_t) (1.0 / const_PUU2m_ * deltaProfileVel_mps_);
+
+//  std::cout << "Command sent: " << out_buffer_.c_str() << std::endl;
   return true;
 }
 
@@ -433,6 +438,7 @@ void KukaHardwareInterface::start()
   ROS_WARN_ONCE("Reading state in start function...");
   rsi_state_ = RSIState(in_buffer_, test_type_IN_);
   ROS_WARN_ONCE("State read in start function.");
+  std::cout << std::endl;
 
   for (std::size_t i = 0; i < n_dof_; ++i)
   {
@@ -449,12 +455,14 @@ void KukaHardwareInterface::start()
                            deltaAccelTime_ms_, deltaDecelTime_ms_, deltaProfileVel_PUUps_,
                            ipoc_, test_type_OUT_).xml_doc;
   ROS_WARN_ONCE("Command sent in start function.");
+  std::cout << std::endl;
 
   server_->send(out_buffer_);
   // Set receive timeout to 1 second
-  server_->set_timeout(1000);
-  ROS_INFO_STREAM_NAMED("kuka_hardware_interface", "Got connection from robot");
+  server_->set_timeout(RECV_TIMEOUT);
 
+  ROS_INFO_STREAM_NAMED("kuka_hardware_interface", "Got connection from robot");
+  std::cout << std::endl;
 }
 
 void KukaHardwareInterface::configure()
